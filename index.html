@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银行智能管理系统 - 中期展示版</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --bank-blue: #0d6efd;
+            --bank-deep-blue: #084298;
+            --bank-light-blue: #eef5ff;
+            --soft-gray: #f5f7fb;
+            --text-main: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 45%, #e8f1ff 100%);
+            color: var(--text-main);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 460px;
+            border: none;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(13, 110, 253, 0.18);
+        }
+
+        .login-header {
+            padding: 32px 32px 22px;
+            background: linear-gradient(135deg, #0d6efd, #084298);
+            color: #fff;
+        }
+
+        .login-header .brand-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(255, 255, 255, 0.18);
+            margin-bottom: 16px;
+        }
+
+        .login-body {
+            background: #fff;
+            padding: 30px 32px 34px;
+        }
+
+        .form-control {
+            min-height: 48px;
+            border-radius: 14px;
+        }
+
+        .btn-rounded {
+            min-height: 48px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+
+        .system-shell {
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, #0d6efd, #084298);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(8, 66, 152, 0.22);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .navbar .nav-link:hover,
+        .navbar .nav-link.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .page-area {
+            padding-top: 30px;
+            padding-bottom: 48px;
+        }
+
+        .hero-card,
+        .info-card,
+        .table-card,
+        .about-card {
+            border: none;
+            border-radius: 22px;
+            box-shadow: 0 12px 28px rgba(31, 41, 55, 0.08);
+        }
+
+        .hero-card {
+            color: #fff;
+            background: linear-gradient(135deg, #0d6efd, #3d8bfd);
+            overflow: hidden;
+        }
+
+        .hero-card .hero-icon {
+            font-size: 84px;
+            opacity: 0.2;
+        }
+
+        .stat-card {
+            height: 100%;
+            border: none;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(31, 41, 55, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 34px rgba(31, 41, 55, 0.12);
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            color: var(--bank-blue);
+            background: var(--bank-light-blue);
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .section-subtitle {
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
+
+        .data-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 6px 12px;
+            background: #eef5ff;
+            color: #0d6efd;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .profile-row {
+            padding: 14px 0;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .profile-row:last-child {
+            border-bottom: none;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+            background: #eef5ff;
+            color: #084298;
+        }
+
+        .table tbody td {
+            vertical-align: middle;
+        }
+
+        .status-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .page-section {
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .footer-note {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .feature-list li {
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .login-header,
+            .login-body {
+                padding-left: 22px;
+                padding-right: 22px;
+            }
+
+            .page-area {
+                padding-top: 22px;
+            }
+
+            .hero-card .hero-icon {
+                font-size: 58px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 登录区域 -->
+<section id="login_area" class="login-wrapper">
+    <div class="card login-card">
+        <div class="login-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <h2 class="mb-2 fw-bold">银行智能管理系统</h2>
+            <p class="mb-0 opacity-75">课程设计中期展示版 · Web 拓展端</p>
+        </div>
+
+        <div class="login-body">
+            <div class="mb-4">
+                <span class="data-chip">
+                    <i class="fa-solid fa-circle-info"></i>
+                    当前已完成：登录验证与数据展示
+                </span>
+            </div>
+
+            <form id="login_form" novalidate>
+                <div class="mb-3">
+                    <label for="account_id" class="form-label fw-semibold">账号</label>
+                    <input type="text" id="account_id" class="form-control" placeholder="请输入6位数字账号" maxlength="6">
+                    <div class="invalid-feedback">
+                        账号必须是6位数字。
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold">密码</label>
+                    <input type="password" id="password" class="form-control" placeholder="请输入6位数字密码" maxlength="6">
+                    <div class="invalid-feedback">
+                        密码必须是6位数字。
+                    </div>
+                </div>
+
+                <div id="login_message" class="alert alert-primary py-2 px-3 small hidden" role="alert"></div>
+
+                <button type="submit" class="btn btn-primary btn-rounded w-100">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>
+                    无刷新登录
+                </button>
+            </form>
+
+            <p class="small text-secondary mb-0 mt-4">
+                示例测试账号：100001（密码：123456）、100002（密码：654321）
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- 系统主区域 -->
+<section id="system_area" class="system-shell hidden">
+    <nav class="navbar navbar-expand-lg navbar-dark topbar">
+        <div class="container">
+            <a class="navbar-brand" href="javascript:void(0);">
+                <i class="fa-solid fa-building-columns me-2"></i>
+                Bank System
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main_nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="main_nav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="javascript:void(0);" data-page="dashboard_page">首页仪表盘</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0);" data-page="account_page">账户管理页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0);" data-page="transaction_page">交易记录页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0);" data-page="about_page">系统说明页</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-3">
+                    <span id="top_user_text" class="small"></span>
+                    <button id="logout_btn" class="btn btn-light btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>
+                        登出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container page-area">
+        <!-- 仪表盘页面 -->
+        <section id="dashboard_page" class="page-section">
+            <div class="card hero-card mb-4">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h1 class="fw-bold mb-3">银行智能管理系统</h1>
+                            <p class="mb-3 fs-5">
+                                本页面用于展示中期阶段已完成的 Flask 数据接口、前端动态渲染与基础响应式布局。
+                            </p>
+                            <span class="badge rounded-pill text-bg-light text-primary px-3 py-2">
+                                当前版本：中期检查版
+                            </span>
+                        </div>
+                        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                            <i class="fa-solid fa-chart-line hero-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <p class="text-secondary mb-2">总账户数</p>
+                                    <h2 id="account_count" class="fw-bold mb-0">0</h2>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <p class="text-secondary mb-2">交易记录数</p>
+                                    <h2 id="transaction_count" class="fw-bold mb-0">0</h2>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <p class="text-secondary mb-2">总交易额</p>
+                                    <h2 id="transaction_amount" class="fw-bold mb-0">¥0.00</h2>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fa-solid fa-sack-dollar"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card info-card mt-4">
+                <div class="card-body p-4">
+                    <h3 class="section-title">中期已完成内容</h3>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light h-100">
+                                <h5 class="fw-bold">
+                                    <i class="fa-solid fa-code me-2 text-primary"></i>
+                                    C++核心端
+                                </h5>
+                                <p class="mb-0 text-secondary">
+                                    已完成登录、存款、取款、转账、交易记录与 txt 文件持久化。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light h-100">
+                                <h5 class="fw-bold">
+                                    <i class="fa-solid fa-server me-2 text-primary"></i>
+                                    Flask后端
+                                </h5>
+                                <p class="mb-0 text-secondary">
+                                    已完成账户读取、交易读取、指定账户查询与登录验证接口。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light h-100">
+                                <h5 class="fw-bold">
+                                    <i class="fa-solid fa-window-maximize me-2 text-primary"></i>
+                                    前端展示
+                                </h5>
+                                <p class="mb-0 text-secondary">
+                                    已完成登录验证、页面切换、动态渲染和基础响应式布局。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 账户管理页面 -->
+        <section id="account_page" class="page-section hidden">
+            <h2 class="section-title">账户管理页</h2>
+            <p class="section-subtitle">当前页面已实现个人信息展示与账户基础数据表格渲染。</p>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card info-card h-100">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-4">
+                                <i class="fa-solid fa-id-card me-2 text-primary"></i>
+                                当前登录账户
+                            </h4>
+
+                            <div class="profile-row">
+                                <div class="text-secondary small">账号</div>
+                                <div id="profile_account_id" class="fw-semibold">-</div>
+                            </div>
+
+                            <div class="profile-row">
+                                <div class="text-secondary small">姓名</div>
+                                <div id="profile_name" class="fw-semibold">-</div>
+                            </div>
+
+                            <div class="profile-row">
+                                <div class="text-secondary small">余额</div>
+                                <div id="profile_balance" class="fw-semibold">¥0.00</div>
+                            </div>
+
+                            <div class="profile-row">
+                                <div class="text-secondary small">账户状态</div>
+                                <div id="profile_status" class="fw-semibold">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card table-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <h4 class="fw-bold mb-0">
+                                    <i class="fa-solid fa-list me-2 text-primary"></i>
+                                    账户基础信息列表
+                                </h4>
+                                <span class="data-chip">密码字段已隐藏</span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>账号</th>
+                                            <th>姓名</th>
+                                            <th>余额</th>
+                                            <th>状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="account_table_body">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-secondary py-4">暂无数据</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交易记录页面 -->
+        <section id="transaction_page" class="page-section hidden">
+            <h2 class="section-title">交易记录页</h2>
+            <p class="section-subtitle">当前页面已实现指定账户交易记录的动态获取与表格展示。</p>
+
+            <div class="card table-card">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h4 class="fw-bold mb-0">
+                            <i class="fa-solid fa-money-check-dollar me-2 text-primary"></i>
+                            我的交易记录
+                        </h4>
+                        <span id="my_transaction_count" class="data-chip">共 0 条</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>交易ID</th>
+                                    <th>交易类型</th>
+                                    <th>金额</th>
+                                    <th>交易对象</th>
+                                    <th>交易时间</th>
+                                    <th>交易状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction_table_body">
+                                <tr>
+                                    <td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 系统说明页面 -->
+        <section id="about_page" class="page-section hidden">
+            <h2 class="section-title">系统说明页</h2>
+            <p class="section-subtitle">本系统为课程设计中期版本，包含C++核心、Flask后端、Web前端三部分。</p>
+
+            <div class="card about-card">
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h4 class="fw-bold mb-3">
+                                <i class="fa-solid fa-cogs me-2 text-primary"></i>
+                                技术栈说明
+                            </h4>
+                            <ul class="feature-list list-unstyled mb-0">
+                                <li><i class="fa-solid fa-check text-success me-2"></i> 前端：HTML5 + CSS3 + JavaScript + Bootstrap 5</li>
+                                <li><i class="fa-solid fa-check text-success me-2"></i> 后端：Python Flask（提供数据接口）</li>
+                                <li><i class="fa-solid fa-check text-success me-2"></i> 核心逻辑：C++（账户/交易核心处理）</li>
+                                <li><i class="fa-solid fa-check text-success me-2"></i> 数据存储：TXT 文件持久化</li>
+                                <li><i class="fa-solid fa-check text-success me-2"></i> 图标：Font Awesome 6</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="fw-bold mb-3">
+                                <i class="fa-solid fa-roadmap me-2 text-primary"></i>
+                                后续开发计划
+                            </h4>
+                            <ul class="feature-list list-unstyled mb-0">
+                                <li><i class="fa-solid fa-arrow-right text-primary me-2"></i> 完善转账、存款、取款前端操作</li>
+                                <li><i class="fa-solid fa-arrow-right text-primary me-2"></i> 增加账户修改、冻结/解冻功能</li>
+                                <li><i class="fa-solid fa-arrow-right text-primary me-2"></i> 实现数据可视化图表展示</li>
+                                <li><i class="fa-solid fa-arrow-right text-primary me-2"></i> 对接C++核心程序的进程通信</li>
+                                <li><i class="fa-solid fa-arrow-right text-primary me-2"></i> 增加用户权限分级管理</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="text-center footer-note">
+                        <p class="mb-0">© 2025 银行智能管理系统 - 课程设计中期展示版</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</section>
+
+<!-- 引入Bootstrap JS和Popper -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+
+<script>
+    // 模拟数据 - 实际项目中替换为后端接口请求
+    const accountData = [
+        { id: "100001", name: "张三", password: "123456", balance: 58962.50, status: "正常" },
+        { id: "100002", name: "李四", password: "654321", balance: 32580.80, status: "正常" },
+        { id: "100003", name: "王五", password: "987654", balance: 156900.25, status: "冻结" },
+        { id: "100004", name: "赵六", password: "112233", balance: 8975.30, status: "正常" }
+    ];
+
+    const transactionData = [
+        { id: "T001", type: "存款", amount: 5000.00, target: "系统", time: "2025-04-01 10:25:30", status: "成功", accountId: "100001" },
+        { id: "T002", type: "转账", amount: 2000.00, target: "100002", time: "2025-04-05 14:12:18", status: "成功", accountId: "100001" },
+        { id: "T003", type: "取款", amount: 1500.00, target: "系统", time: "2025-04-10 09:05:45", status: "成功", accountId: "100001" },
+        { id: "T004", type: "转账", amount: 8000.00, target: "100004", time: "2025-04-12 16:30:22", status: "失败", accountId: "100002" },
+        { id: "T005", type: "存款", amount: 10000.00, target: "系统", time: "2025-04-15 11:40:10", status: "成功", accountId: "100002" }
+    ];
+
+    // 全局变量 - 当前登录用户
+    let currentUser = null;
+
+    // DOM元素
+    const loginForm = document.getElementById('login_form');
+    const loginArea = document.getElementById('login_area');
+    const systemArea = document.getElementById('system_area');
+    const loginMessage = document.getElementById('login_message');
+    const accountIdInput = document.getElementById('account_id');
+    const passwordInput = document.getElementById('password');
+    const logoutBtn = document.getElementById('logout_btn');
+    const topUserText = document.getElementById('top_user_text');
+    const navLinks = document.querySelectorAll('.nav-link[data-page]');
+    const pageSections = document.querySelectorAll('.page-section');
+
+    // 工具函数 - 显示消息
+    function showMessage(el, text, type = 'primary') {
+        el.textContent = text;
+        el.className = `alert alert-${type} py-2 px-3 small`;
+        setTimeout(() => {
+            el.className = `alert alert-${type} py-2 px-3 small hidden`;
+        }, 3000);
+    }
+
+    // 工具函数 - 格式化金额
+    function formatMoney(amount) {
+        return `¥${amount.toFixed(2)}`;
+    }
+
+    // 登录验证
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 验证输入格式
+        const accountId = accountIdInput.value.trim();
+        const password = passwordInput.value.trim();
+        const isAccountValid = /^\d{6}$/.test(accountId);
+        const isPasswordValid = /^\d{6}$/.test(password);
+
+        // 显示验证错误
+        if (!isAccountValid) {
+            accountIdInput.classList.add('is-invalid');
+            return;
+        } else {
+            accountIdInput.classList.remove('is-invalid');
+        }
+
+        if (!isPasswordValid) {
+            passwordInput.classList.add('is-invalid');
+            return;
+        } else {
+            passwordInput.classList.remove('is-invalid');
+        }
+
+        // 验证账号密码
+        const user = accountData.find(item => item.id === accountId && item.password === password);
+        if (!user) {
+            showMessage(loginMessage, '账号或密码错误，请重试！', 'danger');
+            return;
+        }
+
+        // 登录成功
+        currentUser = user;
+        loginArea.classList.add('hidden');
+        systemArea.classList.remove('hidden');
+        topUserText.textContent = `当前登录：${user.name} (${user.id})`;
+        
+        // 初始化页面数据
+        initDashboardData();
+        initAccountPageData();
+        initTransactionPageData();
+        
+        showMessage(loginMessage, `登录成功！欢迎 ${user.name}`, 'success');
+    });
+
+    // 输入框实时验证
+    accountIdInput.addEventListener('input', function() {
+        if (/^\d{6}$/.test(this.value.trim())) {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    passwordInput.addEventListener('input', function() {
+        if (/^\d{6}$/.test(this.value.trim())) {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // 登出功能
+    logoutBtn.addEventListener('click', function() {
+        currentUser = null;
+        systemArea.classList.add('hidden');
+        loginArea.classList.remove('hidden');
+        loginForm.reset();
+        showMessage(loginMessage, '已成功登出', 'info');
+    });
+
+    // 页面切换功能
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            // 切换导航激活状态
+            navLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 切换页面显示
+            const targetPage = this.getAttribute('data-page');
+            pageSections.forEach(section => {
+                section.classList.add('hidden');
+                if (section.id === targetPage) {
+                    section.classList.remove('hidden');
+                }
+            });
+        });
+    });
+
+    // 初始化仪表盘数据
+    function initDashboardData() {
+        // 总账户数
+        document.getElementById('account_count').textContent = accountData.length;
+        
+        // 总交易数
+        document.getElementById('transaction_count').textContent = transactionData.length;
+        
+        // 总交易额
+        const totalAmount = transactionData.reduce((sum, item) => sum + item.amount, 0);
+        document.getElementById('transaction_amount').textContent = formatMoney(totalAmount);
+    }
+
+    // 初始化账户页面数据
+    function initAccountPageData() {
+        if (!currentUser) return;
+
+        // 当前登录用户信息
+        document.getElementById('profile_account_id').textContent = currentUser.id;
+        document.getElementById('profile_name').textContent = currentUser.name;
+        document.getElementById('profile_balance').textContent = formatMoney(currentUser.balance);
+        document.getElementById('profile_status').textContent = currentUser.status;
+
+        // 账户列表
+        const accountTableBody = document.getElementById('account_table_body');
+        accountTableBody.innerHTML = '';
+
+        if (accountData.length === 0) {
+            accountTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-secondary py-4">暂无数据</td></tr>';
+            return;
+        }
+
+        accountData.forEach(account => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${account.id}</td>
+                <td>${account.name}</td>
+                <td>${formatMoney(account.balance)}</td>
+                <td><span class="badge ${account.status === '正常' ? 'bg-success' : 'bg-danger'}">${account.status}</span></td>
+            `;
+            accountTableBody.appendChild(tr);
+        });
+    }
+
+    // 初始化交易页面数据
+    function initTransactionPageData() {
+        if (!currentUser) return;
+
+        // 筛选当前用户的交易记录
+        const userTransactions = transactionData.filter(item => item.accountId === currentUser.id);
+        const transactionTableBody = document.getElementById('transaction_table_body');
+        const transactionCountEl = document.getElementById('my_transaction_count');
+
+        // 更新交易数量
+        transactionCountEl.textContent = `共 ${userTransactions.length} 条`;
+
+        // 清空表格
+        transactionTableBody.innerHTML = '';
+
+        if (userTransactions.length === 0) {
+            transactionTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td></tr>';
+            return;
+        }
+
+        // 渲染交易记录
+        userTransactions.forEach(transaction => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${transaction.id}</td>
+                <td><i class="fa-solid fa-${
+                    transaction.type === '存款' ? 'arrow-down' : transaction.type === '取款' ? 'arrow-up' : 'arrow-right-left'
+                } text-primary me-1"></i>${transaction.type}</td>
+                <td>${formatMoney(transaction.amount)}</td>
+                <td>${transaction.target}</td>
+                <td>${transaction.time}</td>
+                <td><span class="badge ${transaction.status === '成功' ? 'status-success' : 'status-failed'}">${transaction.status}</span></td>
+            `;
+            transactionTableBody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>
