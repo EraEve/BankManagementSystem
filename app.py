@@ -173,6 +173,12 @@ def init_all_data():
     init_branch_file()
     init_branch_graph_file()
 
+# Initialize data at module level so gunicorn (and any WSGI server)
+# picks it up. All init_* functions check os.path.exists first,
+# so existing data files are never overwritten.
+ensure_data_dir()
+init_all_data()
+
 # ============================================================
 # DATA READ/WRITE HELPERS
 # ============================================================
