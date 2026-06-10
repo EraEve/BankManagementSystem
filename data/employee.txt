@@ -1,0 +1,2 @@
+E001|Admin|000000|admin|总行管理部|13800000000|admin@bank.com|2024-01-01|1
+E002|ZhangWei|111111|staff|营业部|13800000001|zhangwei@bank.com|2024-06-01|1

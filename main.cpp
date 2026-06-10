@@ -45,6 +45,7 @@
 #include "query_manager.h"
 #include "queue_manager.h"
 #include "branch_manager.h"
+#include "identity_verifier.h"
 #include "smart_manager.h"
 #include "ui_manager.h"
 

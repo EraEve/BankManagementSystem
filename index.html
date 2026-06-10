@@ -1,293 +1,783 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>银行智能管理系统 v2.1 | 第十组</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <style>
-        :root { --bank-blue: #0d6efd; --bank-deep-blue: #084298; --bank-light-blue: #eef5ff; --soft-gray: #f5f7fb; --text-main: #1f2937; }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; font-family: "Microsoft YaHei", Arial, sans-serif; background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 45%, #e8f1ff 100%); color: var(--text-main); }
-        .hidden { display: none !important; }
-        .login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-        .login-card { width: 100%; max-width: 460px; border: none; border-radius: 24px; overflow: hidden; box-shadow: 0 18px 45px rgba(13,110,253,0.18); }
-        .login-header { padding: 32px 32px 22px; background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; }
-        .login-header .brand-icon { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,0.18); margin-bottom: 16px; }
-        .login-body { background: #fff; padding: 30px 32px 34px; }
-        .form-control { min-height: 48px; border-radius: 14px; }
-        .btn-rounded { min-height: 48px; border-radius: 14px; font-weight: 600; }
-        .topbar { background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; box-shadow: 0 8px 24px rgba(8,66,152,0.22); }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
-        .navbar .nav-link { color: rgba(255,255,255,0.9); border-radius: 12px; padding-left: 14px; padding-right: 14px; }
-        .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff; background: rgba(255,255,255,0.16); }
-        .page-area { padding-top: 30px; padding-bottom: 48px; }
-        .hero-card, .info-card, .table-card, .about-card { border: none; border-radius: 22px; box-shadow: 0 12px 28px rgba(31,41,55,0.08); }
-        .hero-card { color: #fff; background: linear-gradient(135deg, #0d6efd, #3d8bfd); overflow: hidden; }
-        .hero-card .hero-icon { font-size: 84px; opacity: 0.2; }
-        .stat-card { height: 100%; border: none; border-radius: 20px; background: #fff; box-shadow: 0 12px 28px rgba(31,41,55,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(31,41,55,0.12); }
-        .stat-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 22px; color: var(--bank-blue); background: var(--bank-light-blue); }
-        .section-title { font-weight: 700; margin-bottom: 18px; }
-        .section-subtitle { color: #6b7280; margin-bottom: 22px; }
-        .data-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; background: #eef5ff; color: #0d6efd; font-size: 14px; font-weight: 600; }
-        .profile-row { padding: 14px 0; border-bottom: 1px solid #edf0f5; }
-        .profile-row:last-child { border-bottom: none; }
-        .table thead th { white-space: nowrap; background: #eef5ff; color: #084298; }
-        .table tbody td { vertical-align: middle; }
-        .status-success { background: #d1e7dd; color: #0f5132; }
-        .status-failed { background: #f8d7da; color: #842029; }
-        .page-section { animation: fadeIn 0.25s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .footer-note { color: #64748b; font-size: 14px; }
-        @media (max-width: 768px) { .login-header, .login-body { padding-left: 22px; padding-right: 22px; } .page-area { padding-top: 22px; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>银行智能管理系统 v3.0 | 第十组</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--bank-blue:#0d6efd;--bank-deep:#084298;--bank-light:#eef5ff;--soft-gray:#f5f7fb;--text-main:#1f2937}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#eef5ff 0%,#f8fbff 45%,#e8f1ff 100%);color:var(--text-main)}
+.hidden{display:none!important}
+.login-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:480px;border:none;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(13,110,253,0.18)}
+.login-header{padding:28px 28px 18px;background:linear-gradient(135deg,#0d6efd,#084298);color:#fff}
+.login-header .brand-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.18);margin-bottom:12px}
+.login-body{background:#fff;padding:26px 28px 30px}
+.form-control,.form-select{min-height:46px;border-radius:12px}
+.btn-rounded{min-height:46px;border-radius:12px;font-weight:600}
+.topbar{background:linear-gradient(135deg,#0d6efd,#084298);color:#fff;box-shadow:0 8px 24px rgba(8,66,152,0.22)}
+.topbar .nav-link{color:rgba(255,255,255,0.9);border-radius:10px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.topbar .nav-link:hover,.topbar .nav-link.active{color:#fff;background:rgba(255,255,255,0.16)}
+.page-area{padding-top:24px;padding-bottom:48px}
+.card-custom{border:none;border-radius:20px;box-shadow:0 10px 24px rgba(31,41,55,0.08);margin-bottom:20px}
+.stat-card{border:none;border-radius:18px;box-shadow:0 8px 20px rgba(31,41,55,0.06);transition:transform 0.2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-icon{width:44px;height:44px;border-radius:14px;display:flex;justify-content:center;align-items:center;font-size:20px;color:var(--bank-blue);background:var(--bank-light)}
+.section-title{font-weight:700;margin-bottom:14px}
+.page-section{animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.table thead th{white-space:nowrap;background:var(--bank-light);color:var(--bank-deep);font-size:14px}
+.table tbody td{vertical-align:middle;font-size:14px}
+.badge-status-ok{background:#d1e7dd;color:#0f5132}
+.badge-status-fail{background:#f8d7da;color:#842029}
+.hero-card{color:#fff;background:linear-gradient(135deg,#0d6efd,#3d8bfd);border:none;border-radius:20px;overflow:hidden}
+.profile-row{padding:12px 0;border-bottom:1px solid #edf0f5}
+.profile-row:last-child{border-bottom:none}
+.nav-tabs .nav-link{font-size:14px;padding:8px 16px;border-radius:10px 10px 0 0}
+@media(max-width:768px){.login-header,.login-body{padding-left:18px;padding-right:18px}.page-area{padding-top:16px}}
+</style>
 </head>
 <body>
 
+<!-- ============ LOGIN ============ -->
 <section id="login_area" class="login-wrapper">
-    <div class="card login-card">
-        <div class="login-header">
-            <div class="brand-icon"><i class="fa-solid fa-building-columns"></i></div>
-            <h2 class="mb-2 fw-bold">银行智能管理系统</h2>
-            <p class="mb-0 opacity-75">数据结构与算法课程设计 · 第十组 · GitHub Pages</p>
-        </div>
-        <div class="login-body">
-            <div class="mb-4">
-                <span class="data-chip"><i class="fa-solid fa-circle-info"></i> 纯前端 · 数据内嵌 · 即开即用</span>
-            </div>
-            <form id="login_form" novalidate>
-                <div class="mb-3">
-                    <label for="account_id" class="form-label fw-semibold">账号（学号）</label>
-                    <input type="text" id="account_id" class="form-control" placeholder="请输入12位学号" maxlength="20">
-                    <div class="invalid-feedback">账号必须为纯数字。</div>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label fw-semibold">密码（学号后4位）</label>
-                    <input type="password" id="password" class="form-control" placeholder="请输入密码" maxlength="20">
-                    <div class="invalid-feedback">密码必须为纯数字。</div>
-                </div>
-                <div id="login_message" class="alert alert-primary py-2 px-3 small hidden" role="alert"></div>
-                <button type="submit" class="btn btn-primary btn-rounded w-100">
-                    <i class="fa-solid fa-right-to-bracket me-2"></i> 登录
-                </button>
-            </form>
-            <p class="small text-secondary mb-0 mt-4">
-                账号为学号（12位），密码为学号后4位。管理员：尾号0218/0219/0221
-            </p>
-        </div>
-    </div>
+<div class="card login-card">
+<div class="login-header">
+<div class="brand-icon"><i class="fa-solid fa-building-columns"></i></div>
+<h2 class="mb-1 fw-bold">银行智能管理系统</h2>
+<p class="mb-0 opacity-75">v3.0 · C++ 10大模块完整Web实现 · 第十组</p>
+</div>
+<div class="login-body">
+<div class="mb-3"><span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2"><i class="fa-solid fa-shield-halved me-1"></i>多角色登录 · 全功能系统</span></div>
+<form id="login_form" novalidate>
+<div class="mb-3"><label class="form-label fw-semibold small">登录身份</label>
+<select id="login_role" class="form-select"><option value="admin">管理员 (Admin)</option><option value="employee">职员 (Staff)</option><option value="customer" selected>客户 (Customer)</option></select></div>
+<div class="mb-3"><label for="account_id" class="form-label fw-semibold small">账号</label>
+<input type="text" id="account_id" class="form-control" placeholder="管理员E001 / 客户C000001 / 学号">
+<div class="invalid-feedback">请输入有效账号。</div></div>
+<div class="mb-3"><label for="password" class="form-label fw-semibold small">密码</label>
+<input type="password" id="password" class="form-control" placeholder="请输入密码" maxlength="20"></div>
+<div id="login_msg" class="alert py-2 px-3 small hidden" role="alert"></div>
+<button type="submit" class="btn btn-primary btn-rounded w-100"><i class="fa-solid fa-right-to-bracket me-2"></i> 登录</button>
+</form>
+<p class="small text-secondary mb-0 mt-3">管理员: E001/000000 | 职员: E002/111111 | 客户: C000001/123456 | 学员: 学号/后4位</p>
+</div></div>
 </section>
 
-<section id="system_area" class="system-shell hidden">
-    <nav class="navbar navbar-expand-lg navbar-dark topbar">
-        <div class="container">
-            <a class="navbar-brand" href="javascript:void(0);"><i class="fa-solid fa-building-columns me-2"></i>Bank v2.1</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main_nav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="main_nav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link active" href="javascript:void(0);" data-page="dashboard_page">首页仪表盘</a></li>
-                    <li class="nav-item"><a class="nav-link" href="javascript:void(0);" data-page="account_page">账户管理</a></li>
-                    <li class="nav-item"><a class="nav-link" href="javascript:void(0);" data-page="transaction_page">交易记录</a></li>
-                    <li class="nav-item"><a class="nav-link" href="javascript:void(0);" data-page="about_page">系统说明</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <span id="top_user_text" class="small"></span>
-                    <button id="logout_btn" class="btn btn-light btn-sm rounded-pill px-3"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>登出</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+<!-- ============ MAIN SYSTEM ============ -->
+<section id="system_area" class="hidden">
+<nav class="navbar navbar-expand-lg topbar">
+<div class="container-fluid px-3 px-lg-4">
+<a class="navbar-brand fw-bold" href="javascript:void(0);"><i class="fa-solid fa-building-columns me-2"></i>Bank v3.0</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="mainNav">
+<ul class="navbar-nav me-auto" id="nav_tabs"></ul>
+<div class="d-flex align-items-center gap-2">
+<span id="top_user" class="small opacity-75"></span>
+<button id="logout_btn" class="btn btn-outline-light btn-sm rounded-pill"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>登出</button>
+</div></div></div>
+</nav>
 
-    <main class="container page-area">
-        <section id="dashboard_page" class="page-section">
-            <div class="card hero-card mb-4">
-                <div class="card-body p-4 p-lg-5">
-                    <div class="row align-items-center">
-                        <div class="col-lg-8">
-                            <h1 class="fw-bold mb-3">银行智能管理系统</h1>
-                            <p class="mb-3 fs-5">v2.1 · 纯前端单页应用 · 内嵌50人花名册 · GitHub Pages 托管</p>
-                            <span class="badge rounded-pill text-bg-light text-primary px-3 py-2">第十组</span>
-                        </div>
-                        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0"><i class="fa-solid fa-chart-line hero-icon"></i></div>
-                    </div>
-                </div>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-4"><div class="card stat-card"><div class="card-body p-4"><div class="d-flex align-items-center justify-content-between"><div><p class="text-secondary mb-2">总账户数</p><h2 id="account_count" class="fw-bold mb-0">0</h2></div><div class="stat-icon"><i class="fa-solid fa-users"></i></div></div></div></div></div>
-                <div class="col-md-4"><div class="card stat-card"><div class="card-body p-4"><div class="d-flex align-items-center justify-content-between"><div><p class="text-secondary mb-2">交易记录数</p><h2 id="transaction_count" class="fw-bold mb-0">0</h2></div><div class="stat-icon"><i class="fa-solid fa-receipt"></i></div></div></div></div></div>
-                <div class="col-md-4"><div class="card stat-card"><div class="card-body p-4"><div class="d-flex align-items-center justify-content-between"><div><p class="text-secondary mb-2">总交易额</p><h2 id="transaction_amount" class="fw-bold mb-0">&yen;0.00</h2></div><div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div></div></div></div></div>
-            </div>
-            <div class="card info-card mt-4"><div class="card-body p-4"><h3 class="section-title">系统功能</h3><div class="row g-3"><div class="col-md-4"><div class="p-3 rounded-4 bg-light h-100"><h5 class="fw-bold"><i class="fa-solid fa-right-to-bracket me-2 text-primary"></i>登录验证</h5><p class="mb-0 text-secondary">学号+后4位密码登录，管理员/普通用户权限区分。</p></div></div><div class="col-md-4"><div class="p-3 rounded-4 bg-light h-100"><h5 class="fw-bold"><i class="fa-solid fa-database me-2 text-primary"></i>数据内嵌</h5><p class="mb-0 text-secondary">50人花名册数据直接内嵌页面，无需后端服务器。</p></div></div><div class="col-md-4"><div class="p-3 rounded-4 bg-light h-100"><h5 class="fw-bold"><i class="fa-solid fa-cloud me-2 text-primary"></i>GitHub Pages</h5><p class="mb-0 text-secondary">纯静态托管，全球 CDN 加速，打开即用。</p></div></div></div></div></div>
-        </section>
-
-        <section id="account_page" class="page-section hidden">
-            <h2 class="section-title">账户管理</h2>
-            <p class="section-subtitle">个人信息与全班账户列表。</p>
-            <div class="row g-4">
-                <div class="col-lg-4"><div class="card info-card h-100"><div class="card-body p-4"><h4 class="fw-bold mb-4"><i class="fa-solid fa-id-card me-2 text-primary"></i>当前登录账户</h4><div class="profile-row"><div class="text-secondary small">学号</div><div id="profile_account_id" class="fw-semibold">-</div></div><div class="profile-row"><div class="text-secondary small">姓名</div><div id="profile_name" class="fw-semibold">-</div></div><div class="profile-row"><div class="text-secondary small">余额</div><div id="profile_balance" class="fw-semibold">&yen;0.00</div></div><div class="profile-row"><div class="text-secondary small">状态</div><div id="profile_status" class="fw-semibold">-</div></div><div class="profile-row"><div class="text-secondary small">权限</div><div id="profile_role" class="fw-semibold">-</div></div></div></div></div>
-                <div class="col-lg-8"><div class="card table-card"><div class="card-body p-4"><div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h4 class="fw-bold mb-0"><i class="fa-solid fa-list me-2 text-primary"></i>全班账户列表</h4><span class="data-chip">密码已隐藏</span></div><div class="table-responsive" style="max-height:500px;overflow-y:auto;"><table class="table table-hover align-middle mb-0"><thead><tr><th>学号</th><th>姓名</th><th>余额</th><th>状态</th><th>权限</th></tr></thead><tbody id="account_table_body"><tr><td colspan="5" class="text-center text-secondary py-4">暂无数据</td></tr></tbody></table></div></div></div></div>
-            </div>
-        </section>
-
-        <section id="transaction_page" class="page-section hidden">
-            <h2 class="section-title">交易记录</h2>
-            <p class="section-subtitle">当前账户的交易明细。</p>
-            <div class="card table-card"><div class="card-body p-4"><div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h4 class="fw-bold mb-0"><i class="fa-solid fa-money-check-dollar me-2 text-primary"></i>我的交易记录</h4><span id="my_transaction_count" class="data-chip">共 0 条</span></div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>交易ID</th><th>类型</th><th>金额</th><th>交易对象</th><th>时间</th><th>状态</th></tr></thead><tbody id="transaction_table_body"><tr><td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td></tr></tbody></table></div></div></div>
-        </section>
-
-        <section id="about_page" class="page-section hidden">
-            <h2 class="section-title">系统说明</h2>
-            <p class="section-subtitle">数据结构与算法课程设计 · 第十组</p>
-            <div class="card about-card"><div class="card-body p-4"><div class="row g-4"><div class="col-md-6"><h4 class="fw-bold mb-3"><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h4><ul class="list-unstyled mb-0"><li><i class="fa-solid fa-check text-success me-2"></i> 前端：HTML5 + CSS3 + Bootstrap 5 + vanilla JS</li><li><i class="fa-solid fa-check text-success me-2"></i> 托管：GitHub Pages（全球CDN加速）</li><li><i class="fa-solid fa-check text-success me-2"></i> 数据：JSON内嵌（50人花名册）</li><li><i class="fa-solid fa-check text-success me-2"></i> C++核心：10大模块完整实现</li><li><i class="fa-solid fa-check text-success me-2"></i> 图标：Font Awesome 6</li></ul></div><div class="col-md-6"><h4 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-primary"></i>功能模块</h4><ul class="list-unstyled mb-0"><li><i class="fa-solid fa-check text-success me-2"></i> 登录验证（学号+后4位密码）</li><li><i class="fa-solid fa-check text-success me-2"></i> 仪表盘（账户/交易统计）</li><li><i class="fa-solid fa-check text-success me-2"></i> 账户管理（个人信息+全班列表）</li><li><i class="fa-solid fa-check text-success me-2"></i> 交易记录（按账户筛选）</li><li><i class="fa-solid fa-check text-success me-2"></i> 管理员/普通用户权限区分</li></ul></div></div><hr class="my-4"><div class="text-center footer-note"><p class="mb-0">&copy; 2025-2026 银行智能管理系统 · 第十组 · GitHub Pages</p></div></div></div>
-        </section>
-    </main>
+<main class="container page-area" id="page_container"></main>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
 <script>
-var ACCOUNTS = [{"id": "202418440201", "name": "唐楷阳", "password": "0201", "balance": 116899.69, "is_locked": false, "is_admin": false}, {"id": "202418440202", "name": "高展翼", "password": "0202", "balance": 9376.88, "is_locked": false, "is_admin": false}, {"id": "202418440203", "name": "王林艳", "password": "0203", "balance": 53130.13, "is_locked": false, "is_admin": false}, {"id": "202418440204", "name": "王若瑶", "password": "0204", "balance": 44061.88, "is_locked": false, "is_admin": false}, {"id": "202418440205", "name": "李思语", "password": "0205", "balance": 133882.46, "is_locked": false, "is_admin": false}, {"id": "202418440206", "name": "陈雨淇", "password": "0206", "balance": 123422.41, "is_locked": false, "is_admin": false}, {"id": "202418440207", "name": "李文欣", "password": "0207", "balance": 161131.42, "is_locked": false, "is_admin": false}, {"id": "202418440208", "name": "刘正坤", "password": "0208", "balance": 20214.3, "is_locked": false, "is_admin": false}, {"id": "202418440209", "name": "王泓舒", "password": "0209", "balance": 78836.32, "is_locked": false, "is_admin": false}, {"id": "202418440210", "name": "于海超", "password": "0210", "balance": 10214.51, "is_locked": false, "is_admin": false}, {"id": "202418440211", "name": "刘金浩", "password": "0211", "balance": 43261.65, "is_locked": false, "is_admin": false}, {"id": "202418440212", "name": "李拓", "password": "0212", "balance": 93437.18, "is_locked": false, "is_admin": false}, {"id": "202418440213", "name": "刘东", "password": "0213", "balance": 9643.79, "is_locked": false, "is_admin": false}, {"id": "202418440214", "name": "张高赫", "password": "0214", "balance": 39796.59, "is_locked": false, "is_admin": false}, {"id": "202418440215", "name": "耿文晶", "password": "0215", "balance": 118729.78, "is_locked": false, "is_admin": false}, {"id": "202418440216", "name": "陈桐宇", "password": "0216", "balance": 100364.76, "is_locked": false, "is_admin": false}, {"id": "202418440217", "name": "孟庆睿", "password": "0217", "balance": 43577.11, "is_locked": false, "is_admin": false}, {"id": "202418440218", "name": "谷元杰", "password": "0218", "balance": 108121.49, "is_locked": false, "is_admin": true}, {"id": "202418440219", "name": "李延豪", "password": "0219", "balance": 146650.33, "is_locked": false, "is_admin": true}, {"id": "202418440220", "name": "郝璐璐", "password": "0220", "balance": 6137.28, "is_locked": false, "is_admin": false}, {"id": "202418440221", "name": "于名昊", "password": "0221", "balance": 146018.37, "is_locked": false, "is_admin": true}, {"id": "202418440222", "name": "甄建斌", "password": "0222", "balance": 127174.39, "is_locked": false, "is_admin": false}, {"id": "202418440223", "name": "乔国浚", "password": "0223", "balance": 64543.84, "is_locked": false, "is_admin": false}, {"id": "202418440224", "name": "张文杰", "password": "0224", "balance": 32208.91, "is_locked": false, "is_admin": false}, {"id": "202418440225", "name": "宋雨璐", "password": "0225", "balance": 172512.29, "is_locked": false, "is_admin": false}, {"id": "202418440226", "name": "郇梓翔", "password": "0226", "balance": 63904.05, "is_locked": false, "is_admin": false}, {"id": "202418440227", "name": "王若涵", "password": "0227", "balance": 21230.52, "is_locked": false, "is_admin": false}, {"id": "202418440228", "name": "徐然", "password": "0228", "balance": 21925.37, "is_locked": false, "is_admin": false}, {"id": "202418440229", "name": "陈文浩", "password": "0229", "balance": 153311.51, "is_locked": false, "is_admin": false}, {"id": "202418440230", "name": "刘心怡", "password": "0230", "balance": 110652.06, "is_locked": false, "is_admin": false}, {"id": "202418440231", "name": "许建策", "password": "0231", "balance": 146247.45, "is_locked": false, "is_admin": false}, {"id": "202418440232", "name": "许燕薇", "password": "0232", "balance": 132703.06, "is_locked": false, "is_admin": false}, {"id": "202418440233", "name": "顾麦壮", "password": "0233", "balance": 98839.92, "is_locked": false, "is_admin": false}, {"id": "202418440234", "name": "刘兆涵", "password": "0234", "balance": 175295.26, "is_locked": false, "is_admin": false}, {"id": "202418440235", "name": "孔梦寒", "password": "0235", "balance": 71243.52, "is_locked": false, "is_admin": false}, {"id": "202418440236", "name": "傅楷皓", "password": "0236", "balance": 101607.11, "is_locked": false, "is_admin": false}, {"id": "202418440237", "name": "林运磊", "password": "0237", "balance": 150145.82, "is_locked": false, "is_admin": false}, {"id": "202418440238", "name": "王博远", "password": "0238", "balance": 113240.96, "is_locked": false, "is_admin": false}, {"id": "202418440239", "name": "吴跃红", "password": "0239", "balance": 155798.71, "is_locked": false, "is_admin": false}, {"id": "202418440240", "name": "白洁", "password": "0240", "balance": 106036.63, "is_locked": false, "is_admin": false}, {"id": "202418440241", "name": "杨涛铭", "password": "0241", "balance": 128300.07, "is_locked": false, "is_admin": false}, {"id": "202418440242", "name": "王可馨", "password": "0242", "balance": 13019.27, "is_locked": false, "is_admin": false}, {"id": "202418440243", "name": "何晔", "password": "0243", "balance": 44882.2, "is_locked": false, "is_admin": false}, {"id": "202418440244", "name": "王子熙", "password": "0244", "balance": 55642.89, "is_locked": false, "is_admin": false}, {"id": "202418440245", "name": "冶利涛", "password": "0245", "balance": 18963.6, "is_locked": false, "is_admin": false}, {"id": "202418440246", "name": "闫玉敏", "password": "0246", "balance": 45738.41, "is_locked": false, "is_admin": false}, {"id": "202418440247", "name": "连艺淳", "password": "0247", "balance": 22675.25, "is_locked": false, "is_admin": false}, {"id": "202418440248", "name": "武静宇", "password": "0248", "balance": 53645.38, "is_locked": false, "is_admin": false}, {"id": "202418440249", "name": "高愉竣", "password": "0249", "balance": 116244.78, "is_locked": false, "is_admin": false}, {"id": "202418440250", "name": "赵文菁", "password": "0250", "balance": 68845.63, "is_locked": false, "is_admin": false}];
-var TRANSACTIONS = [{"tid": "T001", "from": "202418440201", "to": "系统", "type": "存款", "amount": 5000.0, "time": "2025-04-01 10:25:30", "status": "成功"}, {"tid": "T002", "from": "202418440201", "to": "202418440202", "type": "转账", "amount": 2000.0, "time": "2025-04-05 14:12:18", "status": "成功"}, {"tid": "T003", "from": "202418440201", "to": "系统", "type": "取款", "amount": 1500.0, "time": "2025-04-10 09:05:45", "status": "成功"}, {"tid": "T004", "from": "202418440202", "to": "202418440204", "type": "转账", "amount": 8000.0, "time": "2025-04-12 16:30:22", "status": "失败"}, {"tid": "T005", "from": "202418440202", "to": "系统", "type": "存款", "amount": 10000.0, "time": "2025-04-15 11:40:10", "status": "成功"}, {"tid": "T006", "from": "202418440203", "to": "系统", "type": "存款", "amount": 20000.0, "time": "2025-05-01 08:00:00", "status": "成功"}, {"tid": "T007", "from": "202418440203", "to": "202418440201", "type": "转账", "amount": 5000.0, "time": "2025-05-02 12:00:00", "status": "成功"}, {"tid": "T008", "from": "202418440204", "to": "202418440202", "type": "转账", "amount": 3000.0, "time": "2025-05-03 15:30:00", "status": "成功"}];
-
+// ==================== GLOBAL STATE ====================
 var currentUser = null;
-var loginForm = document.getElementById('login_form');
-var loginArea = document.getElementById('login_area');
-var systemArea = document.getElementById('system_area');
-var loginMessage = document.getElementById('login_message');
-var accountIdInput = document.getElementById('account_id');
-var passwordInput = document.getElementById('password');
-var logoutBtn = document.getElementById('logout_btn');
-var topUserText = document.getElementById('top_user_text');
-var navLinks = document.querySelectorAll('.nav-link[data-page]');
-var pageSections = document.querySelectorAll('.page-section');
+var API_BASE = '';
 
-function showMessage(el, text, type) {
-    type = type || 'primary';
-    el.textContent = text;
-    el.classList.remove('hidden');
-    el.className = 'alert alert-' + type + ' py-2 px-3 small';
-    clearTimeout(el._msgTimer);
-    el._msgTimer = setTimeout(function() { el.classList.add('hidden'); }, 4000);
+function $(id){return document.getElementById(id);}
+function fmt(v){return '&yen;'+Number(v||0).toFixed(2);}
+function fmtNum(v){return Number(v||0).toFixed(2);}
+function bad(s,t){t=t||'success';return '<span class="badge badge-status-'+(t==='success'?'ok':'fail')+'">'+s+'</span>';}
+function showMsg(el,txt,type){
+    type=type||'primary';el.textContent=txt;el.classList.remove('hidden');
+    el.className='alert alert-'+type+' py-2 px-3 small';clearTimeout(el._t);el._t=setTimeout(function(){el.classList.add('hidden')},5000);
+}
+async function api(url,opts){
+    opts=opts||{};var headers={'Content-Type':'application/json'};
+    if(opts.body)opts.body=JSON.stringify(opts.body);
+    try{var r=await fetch(API_BASE+url,{method:opts.method||'GET',headers:headers,body:opts.body});return await r.json();}
+    catch(e){return{success:false,message:'网络错误: '+e.message}};
 }
 
-function formatMoney(amount) {
-    return '&yen;' + Number(amount || 0).toFixed(2);
+// ==================== NAV SYSTEM ====================
+function buildNavTabs(){
+    var tabs=[];
+    if(!currentUser)return;
+    var r=currentUser.role;
+    if(r==='admin'){
+        tabs=[{id:'dashboard',icon:'chart-pie',label:'仪表盘'},
+              {id:'employee',icon:'user-tie',label:'职员管理'},
+              {id:'customer',icon:'users',label:'客户管理'},
+              {id:'card',icon:'credit-card',label:'银行卡管理'},
+              {id:'trade',icon:'money-bill-transfer',label:'业务办理'},
+              {id:'query',icon:'magnifying-glass',label:'业务查询'},
+              {id:'queue',icon:'people-line',label:'排队管理'},
+              {id:'branch',icon:'map-location-dot',label:'网点导航'},
+              {id:'smart',icon:'brain',label:'智能管理'},
+              {id:'identity',icon:'fingerprint',label:'身份核验'},
+              {id:'about',icon:'circle-info',label:'关于'}];
+    }else if(r==='employee'){
+        tabs=[{id:'dashboard',icon:'chart-pie',label:'仪表盘'},
+              {id:'customer',icon:'users',label:'客户管理'},
+              {id:'card',icon:'credit-card',label:'银行卡管理'},
+              {id:'trade',icon:'money-bill-transfer',label:'业务办理'},
+              {id:'query',icon:'magnifying-glass',label:'业务查询'},
+              {id:'queue',icon:'people-line',label:'排队管理'},
+              {id:'about',icon:'circle-info',label:'关于'}];
+    }else{
+        tabs=[{id:'dashboard',icon:'chart-pie',label:'我的仪表盘'},
+              {id:'myprofile',icon:'id-card',label:'个人信息'},
+              {id:'mycards',icon:'credit-card',label:'我的银行卡'},
+              {id:'mytrans',icon:'receipt',label:'交易记录'},
+              {id:'mytrade',icon:'money-bill-transfer',label:'业务办理'},
+              {id:'myinvest',icon:'chart-line',label:'投资顾问'},
+              {id:'about',icon:'circle-info',label:'关于'}];
+    }
+    var html='';
+    for(var i=0;i<tabs.length;i++){
+        html+='<li class="nav-item"><a class="nav-link'+(i===0?' active':'')+'" href="javascript:void(0)" data-page="'+tabs[i].id+'">';
+        html+='<i class="fa-solid fa-'+tabs[i].icon+' me-1"></i>'+tabs[i].label+'</a></li>';
+    }
+    $('nav_tabs').innerHTML=html;
+    // Bind nav clicks
+    var links=document.querySelectorAll('#nav_tabs .nav-link');
+    links.forEach(function(lk){
+        lk.addEventListener('click',function(){
+            links.forEach(function(l){l.classList.remove('active')});
+            this.classList.add('active');
+            var pid=this.getAttribute('data-page');navigate(pid);
+        });
+    });
+    navigate(tabs[0].id);
 }
 
-function statusBadge(isLocked) {
-    return isLocked ? '<span class="badge bg-danger">已锁定</span>' : '<span class="badge bg-success">正常</span>';
+function navigate(pid){
+    var html='';
+    switch(pid){
+    case 'dashboard':html=dashboardPage();break;
+    case 'employee':html=employeePage();break;
+    case 'customer':html=customerPage();break;
+    case 'card':html=cardPage();break;
+    case 'trade':html=tradePage();break;
+    case 'query':html=queryPage();break;
+    case 'queue':html=queuePage();break;
+    case 'branch':html=branchPage();break;
+    case 'smart':html=smartPage();break;
+    case 'identity':html=identityPage();break;
+    case 'myprofile':html=myProfilePage();break;
+    case 'mycards':html=myCardsPage();break;
+    case 'mytrans':html=myTransactionsPage();break;
+    case 'mytrade':html=myTradePage();break;
+    case 'myinvest':html=myInvestPage();break;
+    case 'about':html=aboutPage();break;
+    }
+    $('page_container').innerHTML=html;
+    // Trigger async loaders
+    if(pid==='dashboard')loadDashboard();
+    if(pid==='employee')loadEmployees();
+    if(pid==='customer')loadCustomers();
+    if(pid==='card')loadCards();
+    if(pid==='trade')bindTradePage();
+    if(pid==='query')bindQueryPage();
+    if(pid==='queue'){loadQueueStatus();loadQueueHistory();}
+    if(pid==='branch')loadBranches();
+    if(pid==='smart')loadSmartPage();
+    if(pid==='identity')bindIdentityPage();
+    if(pid==='myprofile')loadMyProfile();
+    if(pid==='mycards')loadMyCards();
+    if(pid==='mytrans')loadMyTransactions();
+    if(pid==='mytrade')bindMyTradePage();
+    if(pid==='myinvest')loadMyInvest();
 }
 
-function roleBadge(isAdmin) {
-    return isAdmin ? '<span class="badge bg-primary">管理员</span>' : '<span class="badge bg-secondary">普通用户</span>';
-}
-
-function txStatusBadge(status) {
-    return status === '成功' ? '<span class="badge status-success">成功</span>' : '<span class="badge status-failed">失败</span>';
-}
-
-loginForm.addEventListener('submit', function(e) {
+// ==================== LOGIN ====================
+$('login_form').addEventListener('submit',async function(e){
     e.preventDefault();
-    var accountId = accountIdInput.value.trim();
-    var password = passwordInput.value.trim();
-    var isAccountValid = /^\d{4,}$/.test(accountId);
-    var isPasswordValid = /^\d{4,}$/.test(password);
-
-    if (!isAccountValid) { accountIdInput.classList.add('is-invalid'); return; }
-    accountIdInput.classList.remove('is-invalid');
-    if (!isPasswordValid) { passwordInput.classList.add('is-invalid'); return; }
-    passwordInput.classList.remove('is-invalid');
-
-    var user = null;
-    for (var i = 0; i < ACCOUNTS.length; i++) {
-        if (ACCOUNTS[i].id === accountId && ACCOUNTS[i].password === password) {
-            user = ACCOUNTS[i];
-            break;
-        }
-    }
-
-    if (!user) {
-        showMessage(loginMessage, '账号或密码错误，请重试！', 'danger');
-        return;
-    }
-
-    if (user.is_locked) {
-        showMessage(loginMessage, '账户已锁定，请联系管理员', 'danger');
-        return;
-    }
-
-    currentUser = user;
-    loginArea.classList.add('hidden');
-    systemArea.classList.remove('hidden');
-    topUserText.textContent = '当前登录：' + user.name + ' (' + user.id + ')';
-    renderDashboard();
-    renderAccountPage();
-    renderTransactionPage();
-    showMessage(loginMessage, '登录成功！欢迎 ' + user.name, 'success');
+    var role=$('login_role').value;
+    var aid=$('account_id').value.trim();
+    var pw=$('password').value.trim();
+    if(!aid||!pw){showMsg($('login_msg'),'请输入账号和密码','warning');return;}
+    var r=await api('/api/login',{method:'POST',body:{role:role,account_id:aid,password:pw}});
+    if(!r.success){showMsg($('login_msg'),r.message,'danger');return;}
+    currentUser=r.data;currentUser.role=role;
+    $('login_area').classList.add('hidden');
+    $('system_area').classList.remove('hidden');
+    $('top_user').textContent='当前: '+r.data.name+' ('+(role==='admin'?'管理员':role==='employee'?'职员':'客户')+')';
+    buildNavTabs();
+});
+$('logout_btn').addEventListener('click',function(){
+    currentUser=null;$('system_area').classList.add('hidden');$('login_area').classList.remove('hidden');
+    $('login_form').reset();$('page_container').innerHTML='';$('nav_tabs').innerHTML='';
 });
 
-accountIdInput.addEventListener('input', function() { if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid'); });
-passwordInput.addEventListener('input', function() { if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid'); });
-
-logoutBtn.addEventListener('click', function() {
-    currentUser = null;
-    systemArea.classList.add('hidden');
-    loginArea.classList.remove('hidden');
-    loginForm.reset();
-    showMessage(loginMessage, '已成功登出', 'info');
-});
-
-navLinks.forEach(function(link) {
-    link.addEventListener('click', function() {
-        navLinks.forEach(function(l) { l.classList.remove('active'); });
-        this.classList.add('active');
-        var targetPage = this.getAttribute('data-page');
-        pageSections.forEach(function(s) { s.classList.add('hidden'); if (s.id === targetPage) s.classList.remove('hidden'); });
-    });
-});
-
-function renderDashboard() {
-    document.getElementById('account_count').textContent = ACCOUNTS.length;
-    document.getElementById('transaction_count').textContent = TRANSACTIONS.length;
-    var total = TRANSACTIONS.reduce(function(s, t) { return s + (Number(t.amount) || 0); }, 0);
-    document.getElementById('transaction_amount').textContent = formatMoney(total);
+// ==================== PAGE BUILDERS ====================
+function dashboardPage(){
+    var h='<h3 class="section-title"><i class="fa-solid fa-chart-pie text-primary me-2"></i>系统仪表盘</h3>';
+    if(currentUser.role==='customer')h=myDashboardPage();
+    else h+=dashboardGrid();
+    return h;
+}
+function dashboardGrid(){
+    return '<div class="row g-3" id="dash_stats">'+statCard('职员数','employee_count','user-tie')+statCard('客户数','customer_count','users')+statCard('银行卡数','card_count','credit-card')+statCard('交易数','transaction_count','receipt')+statCard('交易总额','total_amount','sack-dollar')+statCard('VIP客户','vip_count','crown')+'</div>';
+}
+function statCard(label,id,icon){
+    return '<div class="col-md-4 col-lg-2"><div class="card stat-card"><div class="card-body p-3 text-center"><div class="stat-icon mx-auto mb-2"><i class="fa-solid fa-'+icon+'"></i></div><p class="text-secondary small mb-1">'+label+'</p><h4 class="fw-bold mb-0" id="'+id+'">-</h4></div></div></div>';
 }
 
-function renderAccountPage() {
-    if (!currentUser) return;
-    document.getElementById('profile_account_id').textContent = currentUser.id;
-    document.getElementById('profile_name').textContent = currentUser.name;
-    document.getElementById('profile_balance').textContent = formatMoney(currentUser.balance);
-    document.getElementById('profile_status').innerHTML = statusBadge(currentUser.is_locked);
-    document.getElementById('profile_role').innerHTML = roleBadge(currentUser.is_admin);
-    var tbody = document.getElementById('account_table_body');
-    tbody.innerHTML = '';
-    ACCOUNTS.forEach(function(acc) {
-        var tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + acc.id + '</td><td>' + acc.name + '</td><td>' + formatMoney(acc.balance) + '</td><td>' + statusBadge(acc.is_locked) + '</td><td>' + roleBadge(acc.is_admin) + '</td>';
+// --- Employee Page ---
+function employeePage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-user-tie text-primary me-2"></i>银行职员管理</h3>'+
+    '<div class="row g-3 mb-3"><div class="col-md-4"><button class="btn btn-primary w-100" onclick="showEmpModal()"><i class="fa-solid fa-plus me-1"></i>添加职员</button></div></div>'+
+    '<div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>编号</th><th>姓名</th><th>角色</th><th>部门</th><th>电话</th><th>邮箱</th><th>入职日期</th><th>状态</th><th>操作</th></tr></thead><tbody id="emp_tbody"></tbody></table></div></div></div>'+
+    empFormModal();
+}
+function empFormModal(){
+    return '<div class="modal fade" id="empModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="empModalTitle">添加职员</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="empForm">'+
+    '<input type="hidden" id="emp_eid"><div class="row g-2">'+
+    fld('编号','emp_id','text','E003')+fld('姓名','emp_name','text','')+
+    fld('密码','emp_pw','password','123456')+fld('角色','emp_role','select','staff','<option value="admin">admin</option><option value="staff" selected>staff</option>')+
+    fld('部门','emp_dept','text','')+fld('电话','emp_phone','text','')+
+    fld('邮箱','emp_email','text','')+
+    '</div></form></div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button class="btn btn-primary" onclick="saveEmployee()">保存</button></div></div></div></div>';
+}
+function fld(label,id,type,placeholder,extra){extra=extra||'';
+    return '<div class="col-md-6 mb-2"><label class="form-label small">'+label+'</label>'+(type==='select'?'<select class="form-select form-select-sm" id="'+id+'">'+extra+'</select>':'<input type="'+type+'" class="form-control form-control-sm" id="'+id+'" placeholder="'+placeholder+'">')+'</div>';
+}
+
+async function loadEmployees(){
+    var r=await api('/api/employees');
+    var tbody=$('emp_tbody');if(!tbody)return;
+    tbody.innerHTML='';
+    if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无职员</td></tr>';return;}
+    r.data.forEach(function(e){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+e.id+'</td><td>'+e.name+'</td><td>'+e.role+'</td><td>'+e.department+'</td><td>'+e.phone+'</td><td>'+e.email+'</td><td>'+e.hire_date+'</td><td>'+(e.is_active?bad('在职'):bad('离职','warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editEmp(\''+e.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-warning btn-sm" onclick="resetEmpPw(\''+e.id+'\')"><i class="fa-solid fa-key"></i></button>'+(e.role!=='admin'?'<button class="btn btn-outline-danger btn-sm" onclick="delEmp(\''+e.id+'\')"><i class="fa-solid fa-trash"></i></button>':'')+'</div></td>';
+        tbody.appendChild(tr);
+    });
+}
+async function saveEmployee(){
+    var eid=$('emp_eid').value;
+    var body={id:$('emp_id').value,name:$('emp_name').value,password:$('emp_pw').value,role:$('emp_role').value,department:$('emp_dept').value,phone:$('emp_phone').value,email:$('emp_email').value};
+    var r;
+    if(eid)r=await api('/api/employees/'+eid,{method:'PUT',body:body});
+    else r=await api('/api/employees',{method:'POST',body:body});
+    if(r.success){var m=bootstrap.Modal.getInstance($('empModal'));if(m)m.hide();loadEmployees();loadDashboard();}
+    else alert(r.message);
+}
+async function editEmp(eid){
+    var r=await api('/api/employees');
+    var emp=r.data.find(function(e){return e.id===eid});
+    if(!emp)return;
+    $('empModalTitle').textContent='修改职员';
+    $('emp_eid').value=emp.id;$('emp_id').value=emp.id;$('emp_name').value=emp.name;$('emp_pw').value='';
+    $('emp_role').value=emp.role;$('emp_dept').value=emp.department;$('emp_phone').value=emp.phone;$('emp_email').value=emp.email;
+    new bootstrap.Modal($('empModal')).show();
+}
+async function resetEmpPw(eid){
+    var pw=prompt('请输入新密码 (6位数字):');
+    if(!pw)return;
+    var r=await api('/api/employees/'+eid+'/password',{method:'PUT',body:{password:pw}});
+    alert(r.message);if(r.success)loadEmployees();
+}
+async function delEmp(eid){
+    if(!confirm('确认停用该职员?'))return;
+    var r=await api('/api/employees/'+eid,{method:'DELETE'});alert(r.message);loadEmployees();loadDashboard();
+}
+function showEmpModal(){$('empModalTitle').textContent='添加职员';$('emp_eid').value='';$('emp_id').value='';$('emp_name').value='';$('emp_pw').value='';$('emp_dept').value='';$('emp_phone').value='';$('emp_email').value='';new bootstrap.Modal($('empModal')).show();}
+
+// --- Customer Page ---
+function customerPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-users text-primary me-2"></i>客户账户管理</h3>'+
+    '<div class="row g-3 mb-3"><div class="col-md-4"><button class="btn btn-primary w-100" onclick="showCustModal()"><i class="fa-solid fa-plus me-1"></i>添加客户</button></div></div>'+
+    '<div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>信用分</th><th>金融资产</th><th>地址</th><th>状态</th><th>操作</th></tr></thead><tbody id="cust_tbody"></tbody></table></div></div></div>'+
+    custFormModal();
+}
+function custFormModal(){
+    return '<div class="modal fade" id="custModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="custModalTitle">添加客户</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="custForm"><input type="hidden" id="cust_eid">'+
+    '<div class="row g-2">'+fld('编号','cust_id','text','C000005')+fld('姓名','cust_name','text','')+
+    fld('密码','cust_pw','text','123456')+fld('类型','cust_type','select','normal','<option value="普通" selected>普通</option><option value="VIP">VIP</option>')+
+    fld('电话','cust_phone','text','')+fld('地址','cust_addr','text','')+
+    fld('身份证号','cust_idcard','text','')+fld('信用评分','cust_credit','number','600')+
+    fld('金融资产','cust_assets','number','0')+
+    '</div></form></div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button class="btn btn-primary" onclick="saveCustomer()">保存</button></div></div></div></div>';
+}
+async function loadCustomers(){
+    var r=await api('/api/customers');
+    var tbody=$('cust_tbody');if(!tbody)return;
+    tbody.innerHTML='';
+    if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无客户</td></tr>';return;}
+    r.data.forEach(function(c){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+c.id+'</td><td>'+c.name+'</td><td>'+(c.type==='VIP'?'<span class="badge bg-warning text-dark">VIP</span>':'普通')+'</td><td>'+c.phone+'</td><td>'+c.credit_score+'</td><td>'+fmt(c.financial_assets)+'</td><td>'+(c.address||'-')+'</td><td>'+(c.is_active!==false?bad('正常'):bad('注销','warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCust(\''+c.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-info btn-sm" onclick="viewCust(\''+c.id+'\')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCust(\''+c.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
+        tbody.appendChild(tr);
+    });
+}
+async function saveCustomer(){
+    var eid=$('cust_eid').value;
+    var body={id:$('cust_id').value,name:$('cust_name').value,password:$('cust_pw').value,type:$('cust_type').value,phone:$('cust_phone').value,address:$('cust_addr').value,id_card:$('cust_idcard').value,credit_score:$('cust_credit').value,financial_assets:$('cust_assets').value};
+    var r;
+    if(eid)r=await api('/api/customers/'+eid,{method:'PUT',body:body});
+    else r=await api('/api/customers',{method:'POST',body:body});
+    if(r.success){var m=bootstrap.Modal.getInstance($('custModal'));if(m)m.hide();loadCustomers();loadDashboard();}
+    else alert(r.message);
+}
+async function editCust(cid){
+    var r=await api('/api/customers/'+cid);
+    if(!r.success)return;
+    var c=r.data;
+    $('custModalTitle').textContent='修改客户';$('cust_eid').value=c.id;$('cust_id').value=c.id;$('cust_name').value=c.name;$('cust_pw').value='';
+    $('cust_type').value=c.type;$('cust_phone').value=c.phone;$('cust_addr').value=c.address;$('cust_idcard').value=c.id_card;$('cust_credit').value=c.credit_score;$('cust_assets').value=c.financial_assets;
+    new bootstrap.Modal($('custModal')).show();
+}
+async function viewCust(cid){
+    var r=await api('/api/customers/'+cid);if(!r.success){alert(r.message);return;}
+    var c=r.data;
+    var cardsHtml=c.cards?c.cards.map(function(cd){return '<tr><td>'+cd.id+'</td><td>'+cd.type+'</td><td>'+fmt(cd.balance)+'</td><td>'+fmt(cd.loan_balance)+'</td><td>'+cd.interest_rate+'%</td><td>'+cd.status+'</td></tr>';}).join(''):'';
+    alert('客户: '+c.name+' ('+c.id+')\n类型: '+c.type+'\n信用评分: '+c.credit_score+'\n金融资产: '+fmtNum(c.financial_assets)+'\n电话: '+c.phone+'\n地址: '+c.address+'\n身份证: '+(c.id_card||'无')+(c.cards?'\n\n银行卡('+c.cards.length+'张):\n'+c.cards.map(function(cd){return cd.id+' '+cd.type+' 余额:'+fmtNum(cd.balance)}).join('\n'):''));
+}
+async function delCust(cid){if(!confirm('确认注销该客户?'))return;var r=await api('/api/customers/'+cid,{method:'DELETE'});alert(r.message);loadCustomers();loadDashboard();}
+function showCustModal(){$('custModalTitle').textContent='添加客户';$('cust_eid').value='';$('cust_id').value='';$('cust_name').value='';$('cust_pw').value='';$('cust_type').value='普通';$('cust_phone').value='';$('cust_addr').value='';$('cust_idcard').value='';$('cust_credit').value='600';$('cust_assets').value='0';new bootstrap.Modal($('custModal')).show();}
+
+// --- Card Page ---
+function cardPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-credit-card text-primary me-2"></i>银行卡管理</h3>'+
+    '<div class="row g-3 mb-3"><div class="col-md-4"><button class="btn btn-primary w-100" onclick="showCardModal()"><i class="fa-solid fa-plus me-1"></i>添加银行卡</button></div></div>'+
+    '<div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>卡号</th><th>所属客户</th><th>类型</th><th>余额</th><th>借贷余额</th><th>利率</th><th>信用额度</th><th>状态</th><th>操作</th></tr></thead><tbody id="card_tbody"></tbody></table></div></div></div>'+
+    cardFormModal();
+}
+function cardFormModal(){
+    return '<div class="modal fade" id="cardModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cardModalTitle">添加银行卡</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="card_eid"><div class="row g-2">'+
+    fld('卡号','card_id','text','B10000006')+fld('所属客户编号','card_cust','text','C000001')+
+    fld('类型','card_type','select','借记卡','<option value="借记卡" selected>借记卡</option><option value="储蓄卡">储蓄卡</option><option value="信用卡">信用卡</option>')+
+    fld('余额','card_balance','number','0')+fld('借贷余额','card_loan','number','0')+
+    fld('年利率(%)','card_rate','number','0.35')+fld('信用额度','card_limit','number','0')+
+    fld('日交易限额','card_daily','number','50000')+fld('状态','card_status','select','正常','<option value="正常" selected>正常</option><option value="冻结">冻结</option><option value="注销">注销</option>')+
+    '</div></div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button class="btn btn-primary" onclick="saveCard()">保存</button></div></div></div></div>';
+}
+async function loadCards(){
+    var r=await api('/api/cards');var tbody=$('card_tbody');if(!tbody)return;tbody.innerHTML='';
+    if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无银行卡</td></tr>';return;}
+    r.data.forEach(function(c){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+c.id+'</td><td>'+c.customer_id+' ('+(c.customer_name||'')+')</td><td>'+c.type+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCard(\''+c.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCard(\''+c.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
+        tbody.appendChild(tr);
+    });
+}
+async function saveCard(){
+    var eid=$('card_eid').value;var body={id:$('card_id').value,customer_id:$('card_cust').value,type:$('card_type').value,balance:$('card_balance').value,loan_balance:$('card_loan').value,interest_rate:$('card_rate').value,credit_limit:$('card_limit').value,daily_limit:$('card_daily').value,status:$('card_status').value};
+    var r;if(eid)r=await api('/api/cards/'+eid,{method:'PUT',body:body});else r=await api('/api/cards',{method:'POST',body:body});
+    if(r.success){var m=bootstrap.Modal.getInstance($('cardModal'));if(m)m.hide();loadCards();loadDashboard();}else alert(r.message);
+}
+async function editCard(cid){
+    var r=await api('/api/cards');var c=r.data.find(function(x){return x.id===cid});if(!c)return;
+    $('cardModalTitle').textContent='修改银行卡';$('card_eid').value=c.id;$('card_id').value=c.id;$('card_cust').value=c.customer_id;$('card_type').value=c.type;$('card_balance').value=c.balance;$('card_loan').value=c.loan_balance;$('card_rate').value=c.interest_rate;$('card_limit').value=c.credit_limit;$('card_daily').value=c.daily_limit;$('card_status').value=c.status;
+    new bootstrap.Modal($('cardModal')).show();
+}
+async function delCard(cid){if(!confirm('确认注销该银行卡?'))return;var r=await api('/api/cards/'+cid,{method:'DELETE'});alert(r.message);loadCards();loadDashboard();}
+function showCardModal(){$('cardModalTitle').textContent='添加银行卡';$('card_eid').value='';$('card_id').value='';$('card_cust').value='';$('card_type').value='借记卡';$('card_balance').value='0';$('card_loan').value='0';$('card_rate').value='0.35';$('card_limit').value='0';$('card_daily').value='50000';$('card_status').value='正常';new bootstrap.Modal($('cardModal')).show();}
+
+// --- Trade Page (staff/admin) ---
+function tradePage(){return '<h3 class="section-title"><i class="fa-solid fa-money-bill-transfer text-primary me-2"></i>业务办理</h3>'+tradeFormHtml('staff');}
+function myTradePage(){return '<h3 class="section-title"><i class="fa-solid fa-money-bill-transfer text-primary me-2"></i>业务办理</h3>'+tradeFormHtml('customer');}
+function tradeFormHtml(mode){
+    return '<div class="row g-3">'+
+    tradeCard('存款','success','circle-down',mode,'deposit','存款金额')+
+    tradeCard('取款','danger','circle-up',mode,'withdraw','取款金额')+
+    tradeCard('转账','primary','right-left',mode,'transfer','转账金额',true)+
+    (mode==='staff'?tradeCard('贷款','warning','hand-holding-dollar',mode,'loan','贷款金额')+tradeCard('还款','info','rotate-left',mode,'repay','还款金额'):'')+'</div>'+
+    '<div class="card card-custom mt-3"><div class="card-body p-3"><h5><i class="fa-solid fa-clock-rotate-left me-2"></i>最近交易</h5><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>类型</th><th>金额</th><th>对象</th><th>时间</th><th>状态</th></tr></thead><tbody id="recent_txn"></tbody></table></div></div></div>';
+}
+function tradeCard(title,color,icon,mode,action,placeholder,hasTo){hasTo=hasTo||false;
+    return '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-'+icon+' text-'+color+' me-2"></i>'+title+'</h5>'+
+    (hasTo?'<div class="mb-2"><label class="form-label small">对方账号</label><input type="text" id="'+action+'_to" class="form-control form-control-sm" placeholder="请输入对方账号"></div>':'')+
+    '<div class="mb-2"><label class="form-label small">'+placeholder+'</label><input type="number" id="'+action+'_amount" class="form-control form-control-sm" placeholder="请输入" min="0.01" step="0.01"></div>'+
+    '<div id="'+action+'_msg" class="alert py-1 px-2 small hidden" role="alert"></div>'+
+    '<button class="btn btn-'+color+' btn-sm w-100" onclick="doTrade(\''+action+'\')">确认'+title+'</button></div></div></div>';
+}
+function bindTradePage(){
+    // Bind for staff
+    ['deposit','withdraw','transfer','loan','repay'].forEach(function(a){bindTradeBtn(a);});
+    loadRecentTxns('recent_txn');
+}
+function bindMyTradePage(){
+    ['deposit','withdraw','transfer'].forEach(function(a){bindTradeBtn(a);});
+    loadRecentTxns('recent_txn');
+}
+function bindTradeBtn(action){
+    var btnEl=$(action+'_amount');if(!btnEl)return;
+}
+async function doTrade(action){
+    var amt=parseFloat($(action+'_amount').value);
+    var msgEl=$(action+'_msg');
+    if(isNaN(amt)||amt<=0){showMsg(msgEl,'请输入有效金额','warning');return;}
+    var body={account_id:currentUser.id,amount:amt};
+    if(action==='transfer'){
+        var toId=$('transfer_to').value.trim();
+        if(!toId){showMsg(msgEl,'请输入对方账号','warning');return;}
+        body.from_account=currentUser.id;body.to_account=toId;
+    }
+    if(action==='loan'&&amt>500000){showMsg(msgEl,'单笔贷款不超过50万','warning');return;}
+    if(action==='deposit'&&amt>10000000){showMsg(msgEl,'单笔存款不超过1000万','warning');return;}
+
+    var url='/api/'+(action==='repay'?'repay':action);
+    if(action==='transfer')url='/api/transfer';
+    var r=await api(url,{method:'POST',body:body});
+    showMsg(msgEl,r.message,r.success?'success':'danger');
+    if(r.success){$(action+'_amount').value='';if(action==='transfer')$('transfer_to').value='';loadRecentTxns('recent_txn');loadDashboard();}
+}
+async function loadRecentTxns(tbid){
+    var tbody=$(tbid);if(!tbody)return;
+    var r=await api('/api/transactions?sort=time_desc');
+    tbody.innerHTML='';
+    var myTx=r.data?r.data.filter(function(tx){return tx.from_card===currentUser.id||tx.to_card===currentUser.id||tx.from===currentUser.id||tx.to===currentUser.id;}).slice(0,10):[];
+    if(myTx.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center py-2 text-secondary">暂无交易</td></tr>';return;}
+    myTx.forEach(function(tx){
+        var icon;var tgt='-';
+        if(tx.type==='存款'){icon='circle-down text-success';tgt='银行'}
+        else if(tx.type==='取款'){icon='circle-up text-danger';tgt='银行'}
+        else if(tx.type==='转账'){icon='right-left text-primary';tgt=(tx.from_card===currentUser.id||tx.from===currentUser.id)?tx.to_card||tx.to:tx.from_card||tx.from}
+        else{icon='arrows-spin text-warning';tgt='银行'}
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td><small>'+tx.id+'</small></td><td><i class="fa-solid fa-'+icon+' me-1"></i>'+tx.type+'</td><td class="fw-semibold">'+fmt(tx.amount)+'</td><td>'+tgt+'</td><td><small>'+tx.time+'</small></td><td>'+(tx.status==='成功'?bad('成功'):bad('失败','warn'))+'</td>';
         tbody.appendChild(tr);
     });
 }
 
-function renderTransactionPage() {
-    if (!currentUser) return;
-    var tbody = document.getElementById('transaction_table_body');
-    var countEl = document.getElementById('my_transaction_count');
-    var myTx = TRANSACTIONS.filter(function(tx) { return tx.from === currentUser.id || tx.to === currentUser.id; });
-    countEl.textContent = '共 ' + myTx.length + ' 条';
-    tbody.innerHTML = '';
-    if (myTx.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td></tr>'; return; }
-    myTx.forEach(function(tx) {
-        var icon = tx.type === '存款' ? 'arrow-down' : tx.type === '取款' ? 'arrow-up' : 'arrow-right-left';
-        var target = tx.type === '存款' ? tx.from : tx.to;
-        var tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + tx.tid + '</td><td><i class="fa-solid fa-' + icon + ' text-primary me-1"></i>' + tx.type + '</td><td>' + formatMoney(tx.amount) + '</td><td>' + target + '</td><td>' + tx.time + '</td><td>' + txStatusBadge(tx.status) + '</td>';
-        tbody.appendChild(tr);
-    });
+// --- Query Page ---
+function queryPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-magnifying-glass text-primary me-2"></i>业务查询</h3>'+
+    '<div class="card card-custom mb-3"><div class="card-body p-3"><div class="row g-2 align-items-end">'+
+    qfld('交易类型','q_type','','<option value="">全部</option><option value="存款">存款</option><option value="取款">取款</option><option value="转账">转账</option><option value="贷款">贷款</option><option value="还款">还款</option>')+
+    qfld('开始日期','q_start','date','')+qfld('结束日期','q_end','date','')+
+    qfld('最低金额','q_min','number','')+qfld('最高金额','q_max','number','')+
+    qfld('卡号','q_card','text','')+qfld('客户类型','q_ctype','','','<option value="">全部</option><option value="VIP">VIP</option><option value="普通">普通</option>')+
+    qfld('排序','q_sort','','','<option value="time_desc">时间降序</option><option value="time_asc">时间升序</option><option value="amount_desc">金额降序</option><option value="amount_asc">金额升序</option>')+
+    '</div><div class="mt-2"><button class="btn btn-primary btn-sm" onclick="doQuery()"><i class="fa-solid fa-search me-1"></i>查询</button>'+
+    '<button class="btn btn-outline-secondary btn-sm ms-2" onclick="doSummary()"><i class="fa-solid fa-chart-bar me-1"></i>汇总统计</button></div></div></div>'+
+    '<div class="card card-custom"><div class="card-body p-3"><h5 id="q_result_title">查询结果</h5><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>交易ID</th><th>类型</th><th>金额</th><th>转出卡</th><th>转入卡</th><th>时间</th><th>状态</th></tr></thead><tbody id="q_result"></tbody></table></div></div></div>';
+}
+function qfld(label,id,type,placeholder,extra){extra=extra||'';
+    return '<div class="col-md-3 col-lg-2"><label class="form-label small mb-1">'+label+'</label>'+(id==='q_type'||id==='q_ctype'||id==='q_sort'?'<select class="form-select form-select-sm" id="'+id+'">'+extra+'</select>':'<input type="'+type+'" class="form-control form-control-sm" id="'+id+'" placeholder="'+placeholder+'">')+'</div>';
+}
+function bindQueryPage(){/* no init needed, actions are onclick */}
+async function doQuery(){
+    var params=[];var t=$('q_type').value,s=$('q_start').value,e=$('q_end').value,mn=$('q_min').value,mx=$('q_max').value,cd=$('q_card').value,ct=$('q_ctype').value,srt=$('q_sort').value;
+    if(t)params.push('type='+t);if(s)params.push('start='+s);if(e)params.push('end='+e);
+    if(mn)params.push('min_amt='+mn);if(mx)params.push('max_amt='+mx);if(cd)params.push('card_id='+cd);
+    if(ct)params.push('customer_type='+ct);if(srt)params.push('sort='+srt);
+    var r=await api('/api/transactions?'+params.join('&'));
+    var tbody=$('q_result');$('q_result_title').textContent='查询结果 ('+r.count+' 条)';
+    tbody.innerHTML='';if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="7" class="text-center py-3 text-secondary">暂无数据</td></tr>';return;}
+    r.data.forEach(function(tx){var tr=document.createElement('tr');
+        tr.innerHTML='<td><small>'+tx.id+'</small></td><td>'+tx.type+'</td><td>'+fmt(tx.amount)+'</td><td>'+tx.from_card+'</td><td>'+tx.to_card+'</td><td><small>'+tx.time+'</small></td><td>'+(tx.status==='成功'?bad('成功'):bad('失败','warn'))+'</td>';
+        tbody.appendChild(tr);});
+}
+async function doSummary(){
+    var r=await api('/api/transactions/summary');
+    var s=r.data;
+    var html='<div class="row g-2">';
+    for(var k in s){html+='<div class="col"><div class="card stat-card"><div class="card-body p-2 text-center"><h6>'+k+'</h6><p class="mb-1 fw-bold">'+s[k].count+' 笔</p><small>'+fmt(s[k].total)+'</small></div></div></div>';}
+    html+='</div>';
+    $('q_result').innerHTML='<tr><td colspan="7">'+html+'</td></tr>';
+}
+
+// --- Queue Page ---
+function queuePage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-people-line text-primary me-2"></i>排队管理</h3>'+
+    '<div class="row g-3">'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5>VIP窗口 <span class="badge bg-warning text-dark" id="vip_q_size">0</span></h5><div class="table-responsive" style="max-height:250px;overflow-y:auto"><table class="table table-sm mb-0"><thead><tr><th>票号</th><th>客户</th><th>类型</th><th>业务</th><th>到达时间</th></tr></thead><tbody id="vip_q_tbody"></tbody></table></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5>普通窗口 <span class="badge bg-secondary" id="norm_q_size">0</span></h5><div class="table-responsive" style="max-height:250px;overflow-y:auto"><table class="table table-sm mb-0"><thead><tr><th>票号</th><th>客户</th><th>类型</th><th>业务</th><th>到达时间</th></tr></thead><tbody id="norm_q_tbody"></tbody></table></div></div></div>'+
+    '</div><div class="row g-3 mt-2">'+
+    '<div class="col-md-4"><button class="btn btn-primary btn-sm w-100" onclick="showTakeTicketModal()"><i class="fa-solid fa-ticket me-1"></i>客户取号</button></div>'+
+    '<div class="col-md-4"><button class="btn btn-success btn-sm w-100" onclick="callNext(\'1\')"><i class="fa-solid fa-bullhorn me-1"></i>VIP窗口叫号</button></div>'+
+    '<div class="col-md-4"><button class="btn btn-info btn-sm w-100" onclick="callNext(\'2\')"><i class="fa-solid fa-bullhorn me-1"></i>普通窗口叫号</button></div></div>'+
+    '<div class="card card-custom mt-3"><div class="card-body p-3"><h5>排队历史</h5><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>票号</th><th>客户</th><th>类型</th><th>业务</th><th>窗口</th><th>评分</th><th>状态</th></tr></thead><tbody id="q_hist_tbody"></tbody></table></div></div></div>'+
+    takeTicketModal();
+}
+function takeTicketModal(){
+    return '<div class="modal fade" id="ticketModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">排队取号</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-2"><label class="form-label small">客户编号</label><input type="text" id="ticket_cid" class="form-control form-control-sm"></div><div class="mb-2"><label class="form-label small">业务类型</label><select id="ticket_stype" class="form-select form-select-sm"><option>存款</option><option>取款</option><option>转账</option><option>贷款</option><option>开户</option><option>综合业务</option></select></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button><button class="btn btn-primary btn-sm" onclick="takeTicket()">取号</button></div></div></div></div>';
+}
+async function loadQueueStatus(){
+    var r=await api('/api/queue/status');if(!r.success)return;
+    $('vip_q_size').textContent=r.vip_queue_size;$('norm_q_size').textContent=r.normal_queue_size;
+    var vtbody=$('vip_q_tbody'),ntbody=$('norm_q_tbody');
+    vtbody.innerHTML='';ntbody.innerHTML='';
+    if(r.vip_queue.length===0)vtbody.innerHTML='<tr><td colspan="5" class="text-center py-1 text-secondary">空</td></tr>';
+    r.vip_queue.forEach(function(t){vtbody.innerHTML+='<tr><td>'+t.id+'</td><td>'+t.customer_name+'</td><td><span class="badge bg-warning text-dark">VIP</span></td><td>'+t.service_type+'</td><td><small>'+t.arrive_time+'</small></td></tr>';});
+    if(r.normal_queue.length===0)ntbody.innerHTML='<tr><td colspan="5" class="text-center py-1 text-secondary">空</td></tr>';
+    r.normal_queue.forEach(function(t){ntbody.innerHTML+='<tr><td>'+t.id+'</td><td>'+t.customer_name+'</td><td>普通</td><td>'+t.service_type+'</td><td><small>'+t.arrive_time+'</small></td></tr>';});
+}
+async function loadQueueHistory(){
+    var r=await api('/api/queue/history');var tbody=$('q_hist_tbody');if(!tbody)return;tbody.innerHTML='';
+    if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="7" class="text-center py-2 text-secondary">暂无记录</td></tr>';return;}
+    r.data.forEach(function(t){tbody.innerHTML+='<tr><td>'+t.id+'</td><td>'+t.customer_name+'</td><td>'+(t.customer_type==='VIP'?'<span class="badge bg-warning text-dark">VIP</span>':'普通')+'</td><td>'+t.service_type+'</td><td>'+(t.window_id===0?'VIP':'普通')+'</td><td>'+t.rating+'分</td><td>'+t.status+'</td></tr>';});
+}
+function showTakeTicketModal(){new bootstrap.Modal($('ticketModal')).show();}
+async function takeTicket(){
+    var r=await api('/api/queue/take',{method:'POST',body:{customer_id:$('ticket_cid').value,service_type:$('ticket_stype').value}});
+    if(r.success){var m=bootstrap.Modal.getInstance($('ticketModal'));if(m)m.hide();loadQueueStatus();alert(r.message);}else alert(r.message);
+}
+async function callNext(wtype){
+    var rating=prompt('业务完成后请评分 (1-5):','5');
+    var comp=true;if(!rating||rating==='0'){comp=false;rating=5;}
+    var r=await api('/api/queue/call',{method:'POST',body:{window_type:wtype,completed:comp,rating:parseInt(rating)||5}});
+    if(r.success){loadQueueStatus();loadQueueHistory();alert('叫号: '+r.data.customer_name+' ('+r.data.id+')');}else alert(r.message);
+}
+
+// --- Branch Page ---
+function branchPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-map-location-dot text-primary me-2"></i>网点查询与导航</h3>'+
+    '<div class="row g-3 mb-3"><div class="col-md-4"><button class="btn btn-primary btn-sm w-100" onclick="showBranchModal()"><i class="fa-solid fa-plus me-1"></i>添加网点</button></div>'+
+    '<div class="col-md-4"><button class="btn btn-outline-primary btn-sm w-100" onclick="showPathModal()"><i class="fa-solid fa-route me-1"></i>最短路径导航</button></div>'+
+    '<div class="col-md-4"><button class="btn btn-outline-primary btn-sm w-100" onclick="showSetPathModal()"><i class="fa-solid fa-link me-1"></i>设置路径距离</button></div></div>'+
+    '<div class="card card-custom mb-3"><div class="card-body p-3"><h5>网点列表</h5><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>编号</th><th>名称</th><th>地址</th><th>电话</th><th>营业时间</th><th>服务</th><th>操作</th></tr></thead><tbody id="br_tbody"></tbody></table></div></div></div>'+
+    '<div class="card card-custom"><div class="card-body p-3"><h5>网点地图 (坐标)</h5><canvas id="branch_canvas" width="600" height="400" style="max-width:100%;border:1px solid #dee2e6;border-radius:12px"></canvas></div></div>'+
+    branchFormModal()+pathModal()+setPathModal();
+}
+function branchFormModal(){
+    return '<div class="modal fade" id="branchModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 id="branchModalTitle">添加网点</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="br_eid"><div class="row g-2">'+
+    fld('编号','br_id','text','BR06')+fld('名称','br_name','text','')+fld('地址','br_addr','text','')+fld('电话','br_phone','text','')+
+    fld('营业时间','br_hours','text','09:00-17:00')+fld('服务','br_svc','text','')+fld('坐标X','br_x','number','0')+fld('坐标Y','br_y','number','0')+
+    '</div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button><button class="btn btn-primary btn-sm" onclick="saveBranch()">保存</button></div></div></div></div>';
+}
+function pathModal(){
+    return '<div class="modal fade" id="pathModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>最短路径导航 (Dijkstra)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-2"><label class="form-label small">起始网点</label><select id="path_src" class="form-select form-select-sm"></select></div><div class="mb-2"><label class="form-label small">目标网点</label><select id="path_dst" class="form-select form-select-sm"></select></div><div id="path_result" class="mt-2"></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">关闭</button><button class="btn btn-primary btn-sm" onclick="doPath()">计算最短路径</button></div></div></div></div>';
+}
+function setPathModal(){
+    return '<div class="modal fade" id="setpathModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>设置路径距离</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-2"><label class="form-label small">起始网点</label><select id="sp_src" class="form-select form-select-sm"></select></div><div class="mb-2"><label class="form-label small">目标网点</label><select id="sp_dst" class="form-select form-select-sm"></select></div><div class="mb-2"><label class="form-label small">距离(km)</label><input type="number" id="sp_dist" class="form-control form-control-sm"></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button><button class="btn btn-primary btn-sm" onclick="doSetPath()">设置</button></div></div></div></div>';
+}
+async function loadBranches(){
+    var r=await api('/api/branches');var tbody=$('br_tbody');if(!tbody)return;tbody.innerHTML='';
+    if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="7" class="text-center py-3 text-secondary">暂无网点</td></tr>';return;}
+    r.data.forEach(function(b){tbody.innerHTML+='<tr><td>'+b.id+'</td><td>'+b.name+'</td><td>'+b.address+'</td><td>'+b.phone+'</td><td>'+b.hours+'</td><td>'+b.services+'</td><td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editBranch(\''+b.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-info btn-sm" onclick="reachableFrom(\''+b.id+'\')"><i class="fa-solid fa-location-crosshairs"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delBranch(\''+b.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td></tr>';});
+    drawBranchMap(r.data);
+}
+function drawBranchMap(branches){
+    var cvs=$('branch_canvas');if(!cvs)return;var ctx=cvs.getContext('2d');
+    ctx.clearRect(0,0,600,400);
+    ctx.fillStyle='#f0f4ff';ctx.fillRect(0,0,600,400);
+    var minX=Math.min.apply(null,branches.map(function(b){return b.x}))-5;
+    var maxX=Math.max.apply(null,branches.map(function(b){return b.x}))+5;
+    var minY=Math.min.apply(null,branches.map(function(b){return b.y}))-5;
+    var maxY=Math.max.apply(null,branches.map(function(b){return b.y}))+5;
+    var sx=function(x){return 40+(x-minX)/((maxX-minX)||1)*520};
+    var sy=function(y){return 350-(y-minY)/((maxY-minY)||1)*310};
+    // Draw edges from graph
+    api('/api/branches').then(function(rr){if(!rr.graph)return;
+        for(var i=0;i<rr.graph.length;i++){for(var j=i+1;j<rr.graph[i].length;j++){if(rr.graph[i][j]>=0){
+            ctx.beginPath();ctx.moveTo(sx(branches[i].x),sy(branches[i].y));ctx.lineTo(sx(branches[j].x),sy(branches[j].y));
+            ctx.strokeStyle='#b0c4de';ctx.lineWidth=2;ctx.stroke();
+            ctx.fillStyle='#6b7280';ctx.font='10px Arial';
+            ctx.fillText(rr.graph[i][j]+'km',(sx(branches[i].x)+sx(branches[j].x))/2,(sy(branches[i].y)+sy(branches[j].y))/2-4);
+    }}}});
+    branches.forEach(function(b){ctx.beginPath();ctx.arc(sx(b.x),sy(b.y),10,0,2*Math.PI);ctx.fillStyle='#0d6efd';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff';ctx.font='11px bold Arial';ctx.textAlign='center';ctx.fillText(b.id,sx(b.x),sy(b.y)+4);ctx.fillStyle='#333';ctx.fillText(b.name,sx(b.x),sy(b.y)+24);});
+}
+async function saveBranch(){
+    var eid=$('br_eid').value;var body={id:$('br_id').value,name:$('br_name').value,address:$('br_addr').value,phone:$('br_phone').value,hours:$('br_hours').value,services:$('br_svc').value,x:$('br_x').value,y:$('br_y').value};
+    var r;if(eid)r=await api('/api/branches/'+eid,{method:'PUT',body:body});else r=await api('/api/branches',{method:'POST',body:body});
+    if(r.success){var m=bootstrap.Modal.getInstance($('branchModal'));if(m)m.hide();loadBranches();}else alert(r.message);
+}
+async function editBranch(bid){
+    var r=await api('/api/branches');var b=r.data.find(function(x){return x.id===bid});if(!b)return;
+    $('branchModalTitle').textContent='修改网点';$('br_eid').value=b.id;$('br_id').value=b.id;$('br_name').value=b.name;$('br_addr').value=b.address;$('br_phone').value=b.phone;$('br_hours').value=b.hours;$('br_svc').value=b.services;$('br_x').value=b.x;$('br_y').value=b.y;
+    new bootstrap.Modal($('branchModal')).show();
+}
+async function delBranch(bid){if(!confirm('确认删除?'))return;var r=await api('/api/branches/'+bid,{method:'DELETE'});alert(r.message);loadBranches();}
+function showBranchModal(){$('branchModalTitle').textContent='添加网点';$('br_eid').value='';$('br_id').value='';$('br_name').value='';$('br_addr').value='';$('br_phone').value='';$('br_hours').value='09:00-17:00';$('br_svc').value='';$('br_x').value='0';$('br_y').value='0';new bootstrap.Modal($('branchModal')).show();}
+function showPathModal(){
+    api('/api/branches').then(function(r){var sel=function(id){var h='';(r.data||[]).forEach(function(b){h+='<option value="'+b.id+'">'+b.id+' '+b.name+'</option>'});$(id).innerHTML=h;};sel('path_src');sel('path_dst');});new bootstrap.Modal($('pathModal')).show();
+}
+async function doPath(){
+    var r=await api('/api/branches/'+$('path_src').value+'/path/'+$('path_dst').value);
+    if(r.success){var h='<div class="alert alert-success py-2 small">总距离: <b>'+r.total_distance+' km</b><br>路径: ';r.path.forEach(function(p,i){h+=p.name+(i<r.path.length-1?' → ':'');});h+='</div>';$('path_result').innerHTML=h;}else{$('path_result').innerHTML='<div class="alert alert-danger py-2 small">'+r.message+'</div>';}
+}
+function showSetPathModal(){
+    api('/api/branches').then(function(r){var sel=function(id){var h='';(r.data||[]).forEach(function(b){h+='<option value="'+b.id+'">'+b.id+' '+b.name+'</option>'});$(id).innerHTML=h;};sel('sp_src');sel('sp_dst');});new bootstrap.Modal($('setpathModal')).show();
+}
+async function doSetPath(){
+    var r=await api('/api/branches/path',{method:'POST',body:{src:$('sp_src').value,dst:$('sp_dst').value,distance:parseFloat($('sp_dist').value)}});
+    alert(r.message);if(r.success){var m=bootstrap.Modal.getInstance($('setpathModal'));if(m)m.hide();loadBranches();}
+}
+async function reachableFrom(bid){
+    var r=await api('/api/branches/'+bid+'/reachable');if(!r.success){alert(r.message);return;}
+    var h='从 '+r.from+' 出发:\n';
+    r.reachable.forEach(function(x){h+=x.name+': '+(x.reachable?x.distance.toFixed(1)+' km':'不可达')+'\n';});
+    alert(h);
+}
+
+// --- Smart Page ---
+function smartPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-brain text-primary me-2"></i>智能管理</h3>'+
+    '<div class="row g-3">'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>交易异常检测</h5>'+
+    '<button class="btn btn-warning btn-sm me-2" onclick="detectLarge()">大额交易 (>5万)</button><button class="btn btn-outline-warning btn-sm" onclick="detectHighFreq()">高频交易 (1h>5笔)</button>'+
+    '<div id="anomaly_result" class="mt-2 small"></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-percent text-info me-2"></i>利息计算</h5>'+
+    '<button class="btn btn-info btn-sm me-2" onclick="calcInterest(\'daily\')">日利息</button><button class="btn btn-outline-info btn-sm" onclick="calcInterest(\'monthly\')">月利息</button>'+
+    '<div id="interest_result" class="mt-2 small"></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-chart-bar text-success me-2"></i>客户统计分析</h5>'+
+    '<button class="btn btn-success btn-sm" onclick="loadCustStats()">统计 & 信用评级分布</button><div id="custstats_result" class="mt-2 small"></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-shield-halved text-danger me-2"></i>风控审批</h5>'+
+    '<div class="input-group input-group-sm mb-2"><input type="text" id="risk_cid" class="form-control form-control-sm" placeholder="客户编号 (如C000001)"><button class="btn btn-danger btn-sm" onclick="doRisk()">审批</button></div>'+
+    '<div id="risk_result" class="small"></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-chart-line text-primary me-2"></i>投资顾问</h5>'+
+    '<div class="input-group input-group-sm mb-2"><input type="text" id="invest_cid" class="form-control form-control-sm" placeholder="客户编号"><button class="btn btn-primary btn-sm" onclick="doInvest()">分析</button></div>'+
+    '<div id="invest_result" class="small"></div></div></div></div>';
+}
+function loadSmartPage(){/* actions are onclick */}
+async function detectLarge(){
+    var r=await api('/api/smart/anomaly/large');var h='<b>发现 '+r.count+' 笔大额交易</b><br>';
+    (r.data||[]).forEach(function(t){h+=t.id+': '+t.type+' '+fmt(t.amount)+' ('+t.time+')<br>';});
+    $('anomaly_result').innerHTML=h||'无异常交易';
+}
+async function detectHighFreq(){
+    var r=await api('/api/smart/anomaly/high_freq');var h='<b>发现 '+r.count+' 个高频交易客户</b><br>';
+    (r.data||[]).forEach(function(a){h+=a.customer_id+': '+a.hour+' 小时内 '+a.count+' 笔交易<br>';});
+    $('anomaly_result').innerHTML=h||'无高频交易';
+}
+async function calcInterest(type){
+    var r=await api('/api/smart/interest?type='+type);
+    var h='<b>全行'+ (type==='daily'?'日':'月') +'利息合计: '+fmtNum(r.total_interest)+' 元</b><br>';
+    (r.data||[]).slice(0,10).forEach(function(d){h+=d.card_id+' ('+d.type+'): '+fmtNum(d.interest)+' 元<br>';});
+    $('interest_result').innerHTML=h;
+}
+async function loadCustStats(){
+    var r=await api('/api/smart/customer-stats');if(!r.success){$('custstats_result').innerHTML=r.message;return;}
+    var d=r.data;var h='客户: '+d.active_count+' (VIP '+d.vip_count+'/'+d.normal_count+'普通)<br>';
+    h+='资产: 均'+fmtNum(d.avg_financial_assets)+' 最高'+fmtNum(d.max_financial_assets)+'<br>';
+    h+='信用: 均'+d.avg_credit_score.toFixed(0)+' σ'+d.credit_stddev.toFixed(1)+'<br>';
+    h+='评级分布: ';for(var k in d.rating_distribution){h+=k+':'+d.rating_distribution[k]+'人 ';}
+    $('custstats_result').innerHTML=h;
+}
+async function doRisk(){
+    var cid=$('risk_cid').value.trim();if(!cid)return;
+    var r=await api('/api/smart/risk/'+cid);if(!r.success){$('risk_result').innerHTML=r.message;return;}
+    var d=r.data;var h=d.customer_name+': 原始信用'+d.credit_score+'→风控'+d.risk_score+'<br>';
+    h+='负债率:'+d.debt_ratio+'% | '+d.credit_rating+'<br>';
+    h+='<b>结论: '+d.conclusion+'</b>';
+    $('risk_result').innerHTML=h;
+}
+async function doInvest(){
+    var cid=$('invest_cid').value.trim();if(!cid)return;
+    var r=await api('/api/smart/investment/'+cid);if(!r.success){$('invest_result').innerHTML=r.message;return;}
+    var d=r.data;var h=d.customer_name+': 可用资金'+fmtNum(d.available_cash)+' ('+d.risk_preference+')<br>';
+    for(var k in d.allocation){h+=k+': '+fmt(d.allocation[k])+'<br>';}
+    $('invest_result').innerHTML=h;
+}
+
+// --- Identity Page ---
+function identityPage(){
+    return '<h3 class="section-title"><i class="fa-solid fa-fingerprint text-primary me-2"></i>身份核验与生物识别</h3>'+
+    '<div class="row g-3">'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5>身份证校验 (ISO 7064 MOD 11-2)</h5>'+
+    '<div class="input-group input-group-sm mb-2"><input type="text" id="idcard_input" class="form-control form-control-sm" placeholder="18位身份证号"><button class="btn btn-primary btn-sm" onclick="doVerifyId()">校验</button></div>'+
+    '<div id="idcard_result" class="small"></div></div></div>'+
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5>生物特征识别 (模拟)</h5>'+
+    '<div class="mb-2"><label class="small">客户身份证号</label><input type="text" id="bio_idcard" class="form-control form-control-sm"></div>'+
+    '<button class="btn btn-info btn-sm me-2" onclick="doGenBio()">生成模板</button><button class="btn btn-outline-info btn-sm" onclick="doCmpBio()">比对模板</button>'+
+    '<div id="bio_result" class="mt-2 small"></div></div></div>'+
+    '<div class="col-12"><div class="card card-custom"><div class="card-body p-3"><h5>批量核验全行客户身份证</h5>'+
+    '<button class="btn btn-success btn-sm" onclick="doVerifyAll()">批量核验</button><div id="verifyall_result" class="mt-2 small"></div></div></div></div>';
+}
+function bindIdentityPage(){/* actions are onclick */}
+async function doVerifyId(){
+    var r=await api('/api/identity/verify-id',{method:'POST',body:{id_card:$('idcard_input').value}});
+    var d=r.data;var h='';if(d.valid){h+=bad('✓ 校验通过')+'<br>省份: '+d.province+'<br>出生: '+d.birth+'<br>性别: '+d.gender+'<br>年龄: '+d.age;}
+    else h+=bad('✗ '+d.message,'warn');$('idcard_result').innerHTML=h;
+}
+var saved_template='';
+async function doGenBio(){
+    var r=await api('/api/identity/biometric/generate',{method:'POST',body:{id_card:$('bio_idcard').value}});
+    if(r.success){saved_template=r.data.template;$('bio_result').innerHTML='模板已生成<br><small style="word-break:break-all">'+saved_template+'</small>';}
+    else $('bio_result').innerHTML=r.message;
+}
+async function doCmpBio(){
+    var r=await api('/api/identity/biometric/generate',{method:'POST',body:{id_card:$('bio_idcard').value}});
+    if(!r.success){$('bio_result').innerHTML=r.message;return;}
+    var cmp=await api('/api/identity/biometric/compare',{method:'POST',body:{template1:saved_template,template2:r.data.template}});
+    if(cmp.success){var d=cmp.data;$('bio_result').innerHTML='相似度: '+d.similarity+'% | 阈值: '+d.threshold+'%<br>'+(d.passed?bad('✓ 验证通过'):bad('✗ 验证不通过','warn'));}
+}
+async function doVerifyAll(){
+    var r=await api('/api/identity/verify-all',{method:'POST'});
+    var h='总计: '+r.total+' | 有效: '+r.valid_count+' | 无效: '+r.invalid_count+'<br>';
+    (r.data||[]).forEach(function(x){h+=x.customer_name+': '+x.id_card+' → '+(x.valid?bad('有效'):bad(x.message,'warn'))+'<br>';});
+    $('verifyall_result').innerHTML=h;
+}
+
+// --- Customer Self-Service Pages ---
+function myDashboardPage(){
+    return '<div class="card hero-card mb-3"><div class="card-body p-4"><h1 class="fw-bold">欢迎, '+currentUser.name+'</h1><p class="mb-0 opacity-75">'+currentUser.type+'客户 | 信用评分: '+currentUser.credit_score+'</p></div></div>'+
+    '<div class="row g-3" id="my_dash"><div class="col-md-4"><div class="card stat-card"><div class="card-body p-3"><div class="stat-icon mb-2"><i class="fa-solid fa-wallet"></i></div><p class="text-secondary small mb-1">金融资产</p><h4 class="fw-bold mb-0">'+fmt(currentUser.financial_assets||currentUser.balance||0)+'</h4></div></div></div></div>';
+}
+function myProfilePage(){return '<h3 class="section-title">个人信息</h3><div class="card card-custom"><div class="card-body p-3" id="my_profile_data">加载中...</div></div>';}
+async function loadMyProfile(){
+    if(currentUser.id.startsWith('C')){
+        var r=await api('/api/customers/'+currentUser.id);if(!r.success){$('my_profile_data').innerHTML=r.message;return;}
+        var c=r.data;$('my_profile_data').innerHTML=prof('编号',c.id)+prof('姓名',c.name)+prof('类型',c.type)+prof('信用评分',c.credit_score)+prof('金融资产',fmt(c.financial_assets))+prof('电话',c.phone)+prof('地址',c.address)+prof('身份证',c.id_card)+prof('开户日期',c.open_date);
+    }else{$('my_profile_data').innerHTML=prof('学号',currentUser.id)+prof('姓名',currentUser.name)+prof('余额',fmt(currentUser.balance))+prof('类型',currentUser.type);}
+}
+function prof(k,v){return '<div class="profile-row"><div class="text-secondary small">'+k+'</div><div class="fw-semibold">'+v+'</div></div>';}
+
+function myCardsPage(){return '<h3 class="section-title">我的银行卡</h3><div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>卡号</th><th>类型</th><th>余额</th><th>借贷余额</th><th>利率</th><th>信用额度</th><th>状态</th></tr></thead><tbody id="my_cards_tbody"></tbody></table></div></div></div>';}
+async function loadMyCards(){
+    var r=await api('/api/cards');var tbody=$('my_cards_tbody');if(!tbody)return;tbody.innerHTML='';
+    var myCards=r.data?r.data.filter(function(c){return c.customer_id===currentUser.id}):[];
+    // Also check account.txt (simplified)
+    if(myCards.length===0){tbody.innerHTML='<tr><td class="text-center py-2 text-secondary" colspan="7">当前为简化账户，无独立银行卡信息。请使用业务办理功能进行操作。</td></tr>';return;}
+    myCards.forEach(function(c){var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+c.id+'</td><td>'+c.type+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>';tbody.appendChild(tr);});
+}
+
+function myTransactionsPage(){return '<h3 class="section-title">我的交易记录</h3><div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>类型</th><th>金额</th><th>对象</th><th>时间</th><th>状态</th></tr></thead><tbody id="my_txn_tbody"></tbody></table></div></div></div>';}
+async function loadMyTransactions(){
+    var r=await api('/api/transactions?sort=time_desc');var tbody=$('my_txn_tbody');if(!tbody)return;tbody.innerHTML='';
+    var myTx=r.data?r.data.filter(function(tx){return tx.from_card===currentUser.id||tx.to_card===currentUser.id||tx.from===currentUser.id||tx.to===currentUser.id}):[];
+    if(myTx.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center py-3 text-secondary">暂无交易记录</td></tr>';return;}
+    myTx.forEach(function(tx){var icon,tgt='-';
+        if(tx.type==='存款'){icon='circle-down text-success';tgt='银行'}else if(tx.type==='取款'){icon='circle-up text-danger';tgt='银行'}else if(tx.type==='转账'){icon='right-left text-primary';tgt=(tx.from_card===currentUser.id||tx.from===currentUser.id)?tx.to_card||tx.to:tx.from_card||tx.from}else{icon='arrows-spin';tgt='银行'}
+        var tr=document.createElement('tr');tr.innerHTML='<td><small>'+tx.id+'</small></td><td><i class="fa-solid fa-'+icon+' me-1"></i>'+tx.type+'</td><td class="fw-semibold">'+fmt(tx.amount)+'</td><td>'+tgt+'</td><td><small>'+tx.time+'</small></td><td>'+(tx.status==='成功'?bad('成功'):bad('失败','warn'))+'</td>';tbody.appendChild(tr);});
+}
+
+function myInvestPage(){return '<h3 class="section-title"><i class="fa-solid fa-chart-line text-primary me-2"></i>投资顾问</h3>'+
+    '<div class="card card-custom"><div class="card-body p-3"><h5>利息信息</h5><button class="btn btn-info btn-sm me-2" onclick="calcMyInterest(\'daily\')">日利息</button><button class="btn btn-outline-info btn-sm" onclick="calcMyInterest(\'monthly\')">月利息</button><div id="my_interest" class="mt-2 small"></div></div></div>'+
+    '<div class="card card-custom mt-3"><div class="card-body p-3"><h5>投资建议</h5><button class="btn btn-primary btn-sm" onclick="loadMyInvest()">获取投资建议</button><div id="my_invest_result" class="mt-2 small"></div></div></div>';}
+async function calcMyInterest(type){
+    var r=await api('/api/smart/interest?type='+type);if(!r.success){$('my_interest').innerHTML=r.message;return;}
+    var myCards=[];var cids=[];if(currentUser.id.startsWith('C')){
+        var cr=await api('/api/customers/'+currentUser.id);if(cr.success&&cr.data.cards)cr.data.cards.forEach(function(c){cids.push(c.id);});
+    }else{cids.push(currentUser.id);}
+    var h='';var total=0;r.data.forEach(function(d){if(cids.indexOf(d.card_id)>=0){h+=d.card_id+' ('+d.type+'): '+fmtNum(d.interest)+' 元<br>';total+=d.interest;}});
+    if(!h)h='暂无利息数据';h='<b>合计: '+fmtNum(total)+' 元</b><br>'+h;$('my_interest').innerHTML=h;
+}
+async function loadMyInvest(){
+    var cid=currentUser.id;if(!cid.startsWith('C')){var cr=await api('/api/customers');var cf=cr.data?cr.data.find(function(x){return x.id===cid||x.name===currentUser.name}):null;if(cf)cid=cf.id;}
+    var r=await api('/api/smart/investment/'+cid);if(!r.success){$('my_invest_result').innerHTML=r.message;return;}
+    var d=r.data;var h='可用资金: <b>'+fmtNum(d.available_cash)+'</b> ('+d.risk_preference+')<br>';
+    for(var k in d.allocation){h+=k+': '+fmt(d.allocation[k])+'<br>';}$('my_invest_result').innerHTML=h;
+}
+
+// --- About Page ---
+function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3><div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.0 · 第十组 · C++全功能Web实现</p></div></div>';}
+
+// --- Dashboard Loader ---
+async function loadDashboard(){
+    if(currentUser.role==='customer')return;
+    var r=await api('/api/dashboard');if(!r.success)return;
+    var d=r.data;
+    var set=function(id,v){var el=$(id);if(el)el.textContent=v;};
+    set('employee_count',d.employee_count);set('customer_count',d.customer_count);
+    set('card_count',d.card_count);set('transaction_count',d.transaction_count);
+    set('total_amount',fmt(d.total_transaction_amount));set('vip_count',d.vip_count);
 }
 </script>
 </body>

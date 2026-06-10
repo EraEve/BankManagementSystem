@@ -3,7 +3,8 @@ import re, os, sys
 
 file_order = ["common.h", "employee_manager.h", "customer_manager.h", "card_manager.h",
               "transaction_manager.h", "query_manager.h", "queue_manager.h",
-              "branch_manager.h", "smart_manager.h", "ui_manager.h", "main.cpp"]
+              "branch_manager.h", "identity_verifier.h", "smart_manager.h",
+              "ui_manager.h", "main.cpp"]
 
 files = {}
 print("=" * 60)
@@ -136,6 +137,24 @@ required = [
     ("customer_statistics", "smart_manager.h"),
     ("risk_approval", "smart_manager.h"),
     ("investment_advisor", "smart_manager.h"),
+    ("identity_verifier_menu", "identity_verifier.h"),
+    ("validate_chinese_id_card", "common.h"),
+    ("verify_customer_identity", "identity_verifier.h"),
+    ("verify_id_card_full", "identity_verifier.h"),
+    ("batch_verify_id_cards", "identity_verifier.h"),
+    ("enroll_biometric", "identity_verifier.h"),
+    ("verify_biometric", "identity_verifier.h"),
+    ("biometric_overview", "identity_verifier.h"),
+    ("capture_id_photo", "identity_verifier.h"),
+    ("capture_face_photo", "identity_verifier.h"),
+    ("ocr_read_document", "identity_verifier.h"),
+    ("update_customer_id_info", "identity_verifier.h"),
+    ("generate_biometric_template", "common.h"),
+    ("compare_biometric_templates", "common.h"),
+    ("extract_birth_from_id", "common.h"),
+    ("extract_gender_from_id", "common.h"),
+    ("extract_age_from_id", "common.h"),
+    ("get_province_by_code", "common.h"),
     ("main_menu", "ui_manager.h"),
     ("admin_menu", "ui_manager.h"),
     ("staff_menu", "ui_manager.h"),
@@ -147,7 +166,8 @@ all_present = True
 for func_name, expected_file in required:
     found = False
     for fname, content in files.items():
-        if re.search(r'(?:inline\s+)?\w+(?:\s*\*)?\s+' + re.escape(func_name) + r'\s*\(', content):
+        # match return types: void, int, string, vector<...>, map<...>, double, bool, etc.
+        if re.search(r'(?:inline\s+)?[\w<>,\s]+(?:\s*\*)?\s+' + re.escape(func_name) + r'\s*\(', content):
             found = True
             break
     if not found:
@@ -168,6 +188,10 @@ checks = [
     ("Graph adjacency matrix", "g_branch_graph"),
     ("Sliding window detection", "detect_multi_transactions"),
     ("Weighted credit model", "get_credit_rating"),
+    ("Chinese ID validation ISO7064", "validate_chinese_id_card"),
+    ("Biometric template generation", "generate_biometric_template"),
+    ("Biometric comparison", "compare_biometric_templates"),
+    ("ID card OCR simulation", "ocr_read_document"),
 ]
 for label, pattern in checks:
     print(f"  [{'OK' if pattern in all_text else 'MISSING'}] {label}")

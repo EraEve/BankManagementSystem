@@ -327,6 +327,8 @@ inline void smart_menu() {
         cout << "  ║  5. 客户统计分析 & 信用评级     ║\n";
         cout << "  ║  6. 风控审批                    ║\n";
         cout << "  ║  7. 投资顾问                    ║\n";
+        cout << "  ║  [身份核验·生物识别]              ║\n";
+        cout << "  ║  8. 身份核验与生物识别          ║\n";
         cout << "  ║  0. 返回上级菜单                ║\n";
         cout << "  ╚══════════════════════════════════╝\n";
         cout << "  请选择: ";
@@ -338,6 +340,7 @@ inline void smart_menu() {
         else if (ch == "5") { customer_statistics(); pause(); }
         else if (ch == "6") { risk_approval(); pause(); }
         else if (ch == "7") { investment_advisor(); pause(); }
+        else if (ch == "8") { identity_verifier_menu(); }
         else if (ch == "0") break;
     }
 }

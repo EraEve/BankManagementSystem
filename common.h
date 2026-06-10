@@ -85,6 +85,10 @@ struct Customer {
     string id_card;          // 身份证号
     vector<string> card_ids; // 关联银行卡编号列表 (广义表)
     bool is_active;          // 是否激活
+    // 需求8补充: 身份核验/生物识别/影像读取
+    string id_photo_path;    // 证件照文件路径
+    string biometric_data;   // 生物特征模板 (模拟指纹/人脸特征)
+    string face_photo_path;  // 人脸照片文件路径
 
     Customer() : credit_score(600), financial_assets(0), is_active(true) {}
 };
@@ -558,5 +562,138 @@ public:
     int size() const { return sz; }
     void inorder(void (*fn)(const K&, const V&)) const { inorder_traverse(root, fn); }
 };
+
+// ==================== 需求8补充: 身份证校验工具 ====================
+
+/** 中国身份证号码行政区划代码(前6位)对照表(部分) */
+inline string get_province_by_code(const string& code) {
+    // 前2位代表省份
+    if (code.length() < 2) return "未知";
+    string p2 = code.substr(0, 2);
+    if (p2 == "11") return "北京市";
+    if (p2 == "12") return "天津市";
+    if (p2 == "13") return "河北省";
+    if (p2 == "14") return "山西省";
+    if (p2 == "15") return "内蒙古自治区";
+    if (p2 == "21") return "辽宁省";
+    if (p2 == "22") return "吉林省";
+    if (p2 == "23") return "黑龙江省";
+    if (p2 == "31") return "上海市";
+    if (p2 == "32") return "江苏省";
+    if (p2 == "33") return "浙江省";
+    if (p2 == "34") return "安徽省";
+    if (p2 == "35") return "福建省";
+    if (p2 == "36") return "江西省";
+    if (p2 == "37") return "山东省";
+    if (p2 == "41") return "河南省";
+    if (p2 == "42") return "湖北省";
+    if (p2 == "43") return "湖南省";
+    if (p2 == "44") return "广东省";
+    if (p2 == "45") return "广西壮族自治区";
+    if (p2 == "46") return "海南省";
+    if (p2 == "50") return "重庆市";
+    if (p2 == "51") return "四川省";
+    if (p2 == "52") return "贵州省";
+    if (p2 == "53") return "云南省";
+    if (p2 == "54") return "西藏自治区";
+    if (p2 == "61") return "陕西省";
+    if (p2 == "62") return "甘肃省";
+    if (p2 == "63") return "青海省";
+    if (p2 == "64") return "宁夏回族自治区";
+    if (p2 == "65") return "新疆维吾尔自治区";
+    if (p2 == "71") return "台湾省";
+    if (p2 == "81") return "香港特别行政区";
+    if (p2 == "82") return "澳门特别行政区";
+    return "未知省份";
+}
+
+/**
+ * 中国18位身份证号码校验 (ISO 7064:1983 MOD 11-2)
+ * @param id 18位身份证号
+ * @return true=格式合法, false=不合法
+ */
+inline bool validate_chinese_id_card(const string& id) {
+    if (id.length() != 18) return false;
+    // 前17位必须为数字
+    for (int i = 0; i < 17; i++) {
+        if (id[i] < '0' || id[i] > '9') return false;
+    }
+    // 第18位: 数字或X
+    char last = id[17];
+    if (!((last >= '0' && last <= '9') || last == 'X' || last == 'x')) return false;
+    // 校验出生日期
+    int year = (id[6]-'0')*1000 + (id[7]-'0')*100 + (id[8]-'0')*10 + (id[9]-'0');
+    int month = (id[10]-'0')*10 + (id[11]-'0');
+    int day = (id[12]-'0')*10 + (id[13]-'0');
+    if (year < 1900 || year > 2100) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    // 校验位计算 (ISO 7064 MOD 11-2)
+    int weights[17] = {7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2};
+    char check_map[11] = {'1','0','X','9','8','7','6','5','4','3','2'};
+    int sum = 0;
+    for (int i = 0; i < 17; i++) {
+        sum += (id[i] - '0') * weights[i];
+    }
+    int remainder = sum % 11;
+    char expected = check_map[remainder];
+    return (last == expected || (last == 'x' && expected == 'X'));
+}
+
+/** 从身份证号提取出生日期 */
+inline string extract_birth_from_id(const string& id) {
+    if (id.length() < 14) return "未知";
+    return id.substr(6, 4) + "-" + id.substr(10, 2) + "-" + id.substr(12, 2);
+}
+
+/** 从身份证号提取性别 (第17位: 奇=男, 偶=女) */
+inline string extract_gender_from_id(const string& id) {
+    if (id.length() < 17) return "未知";
+    int digit = id[16] - '0';
+    return (digit % 2 == 1) ? "男" : "女";
+}
+
+/** 从身份证号提取年龄 */
+inline int extract_age_from_id(const string& id) {
+    if (id.length() < 14) return -1;
+    int by = (id[6]-'0')*1000 + (id[7]-'0')*100 + (id[8]-'0')*10 + (id[9]-'0');
+    int bm = (id[10]-'0')*10 + (id[11]-'0');
+    int bd = (id[12]-'0')*10 + (id[13]-'0');
+    // 获取当前日期
+    time_t t = time(0);
+    tm* l = localtime(&t);
+    int cy = l->tm_year + 1900;
+    int cm = l->tm_mon + 1;
+    int cd = l->tm_mday;
+    int age = cy - by;
+    if (cm < bm || (cm == bm && cd < bd)) age--;
+    return age;
+}
+
+/** 生成模拟生物特征模板 (简化为身份证号哈希) */
+inline string generate_biometric_template(const string& id_card) {
+    // 模拟: 对身份证号做简单哈希
+    string tmpl;
+    for (size_t i = 0; i < id_card.length(); i++) {
+        char c = id_card[i];
+        int v = (c * 7 + i * 13) % 256;
+        char hex[3];
+        sprintf(hex, "%02X", v);
+        tmpl += hex;
+    }
+    return tmpl;
+}
+
+/** 比对两个生物特征模板 (模拟: 字符串相似度) */
+inline double compare_biometric_templates(const string& t1, const string& t2) {
+    if (t1.empty() || t2.empty()) return 0.0;
+    if (t1 == t2) return 100.0;
+    int match = 0;
+    size_t len = t1.length() < t2.length() ? t1.length() : t2.length();
+    for (size_t i = 0; i < len; i++) {
+        if (t1[i] == t2[i]) match++;
+    }
+    return (double)match / len * 100.0;
+}
 
 #endif // COMMON_H

@@ -58,6 +58,10 @@ inline void load_customers() {
         c.financial_assets = safe_double(p[7]);
         c.address = p[8]; c.id_card = p[9];
         c.is_active = (p.size() > 10 ? (p[10] == "1") : true);
+        // 需求8补充字段 (向后兼容)
+        c.id_photo_path = (p.size() > 11 ? p[11] : "");
+        c.biometric_data = (p.size() > 12 ? p[12] : "");
+        c.face_photo_path = (p.size() > 13 ? p[13] : "");
         // card_ids将在加载card数据时填充
         g_cust_index[c.id] = g_customers.size();
         g_customers.push_back(c);
@@ -75,7 +79,9 @@ inline void save_customers() {
           << double_to_str(c.credit_score) << "|"
           << double_to_str(c.financial_assets) << "|"
           << c.address << "|" << c.id_card << "|"
-          << (c.is_active ? "1" : "0") << endl;
+          << (c.is_active ? "1" : "0") << "|"
+          << c.id_photo_path << "|" << c.biometric_data << "|"
+          << c.face_photo_path << endl;
     }
     f.close();
 }
@@ -221,6 +227,17 @@ inline void view_customer_profile(int cust_idx) {
     cout << "  金融资产: " << double_to_str(c.financial_assets) << " 元" << endl;
     cout << "  地址:     " << c.address << endl;
     cout << "  身份证号: " << c.id_card << endl;
+    // 身份证信息自动解析
+    if (!c.id_card.empty() && c.id_card.length() >= 18) {
+        cout << "  身份证省份: " << get_province_by_code(c.id_card) << endl;
+        cout << "  出生日期:   " << extract_birth_from_id(c.id_card) << endl;
+        cout << "  性别:       " << extract_gender_from_id(c.id_card) << endl;
+        cout << "  年龄:       " << extract_age_from_id(c.id_card) << " 岁" << endl;
+        cout << "  身份证校验: " << (validate_chinese_id_card(c.id_card) ? "✓ 合法" : "✗ 不合法") << endl;
+    }
+    cout << "  证件照:     " << (c.id_photo_path.empty() ? "未录入" : c.id_photo_path) << endl;
+    cout << "  生物特征:   " << (c.biometric_data.empty() ? "未录入" : "已录入 (" + c.biometric_data.substr(0,16) + "...)") << endl;
+    cout << "  人脸照片:   " << (c.face_photo_path.empty() ? "未录入" : c.face_photo_path) << endl;
     cout << "  关联卡数: " << c.card_ids.size() << " 张" << endl;
     if (!c.card_ids.empty()) {
         cout << "  关联卡号: ";
