@@ -156,16 +156,16 @@ def login():
     account_id = str(form_data.get("account_id", "")).strip()
     password = str(form_data.get("password", "")).strip()
 
-    if len(account_id) != 6 or not account_id.isdigit():
+    if len(account_id) < 4 or len(account_id) > 20 or not account_id.isdigit():
         return jsonify({
             "success": False,
-            "message": "账号格式错误，账号必须是6位数字"
+            "message": "账号格式错误，账号必须为纯数字"
         }), 400
 
-    if len(password) != 6 or not password.isdigit():
+    if len(password) < 4 or len(password) > 20 or not password.isdigit():
         return jsonify({
             "success": False,
-            "message": "密码格式错误，密码必须是6位数字"
+            "message": "密码格式错误，密码必须为纯数字"
         }), 400
 
     account = find_account(account_id, include_password=True)

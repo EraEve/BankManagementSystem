@@ -282,7 +282,7 @@
             <form id="login_form" novalidate>
                 <div class="mb-3">
                     <label for="account_id" class="form-label fw-semibold">账号</label>
-                    <input type="text" id="account_id" class="form-control" placeholder="请输入6位数字账号" maxlength="6">
+                    <input type="text" id="account_id" class="form-control" placeholder="请输入学号（12位数字）" maxlength="20">
                     <div class="invalid-feedback">
                         账号必须是6位数字。
                     </div>
@@ -290,7 +290,7 @@
 
                 <div class="mb-3">
                     <label for="password" class="form-label fw-semibold">密码</label>
-                    <input type="password" id="password" class="form-control" placeholder="请输入6位数字密码" maxlength="6">
+                    <input type="password" id="password" class="form-control" placeholder="请输入密码（学号后4位）" maxlength="20">
                     <div class="invalid-feedback">
                         密码必须是6位数字。
                     </div>
@@ -305,7 +305,7 @@
             </form>
 
             <p class="small text-secondary mb-0 mt-4">
-                示例测试账号：100001（密码：123456）、100002（密码：654321）、管理员 888888（密码：888888）
+                账号为学号（12位），密码为学号后4位。管理员：尾号0218/0219/0221
             </p>
         </div>
     </div>
@@ -717,8 +717,8 @@
 
         const accountId = accountIdInput.value.trim();
         const password  = passwordInput.value.trim();
-        const isAccountValid = /^\d{6}$/.test(accountId);
-        const isPasswordValid = /^\d{6}$/.test(password);
+        const isAccountValid = /^\d{4,}$/.test(accountId);
+        const isPasswordValid = /^\d{4,}$/.test(password);
 
         if (!isAccountValid) { accountIdInput.classList.add('is-invalid'); return; }
         else { accountIdInput.classList.remove('is-invalid'); }
@@ -751,10 +751,10 @@
 
     // 实时清除验证错误
     accountIdInput.addEventListener('input', function () {
-        if (/^\d{6}$/.test(this.value.trim())) this.classList.remove('is-invalid');
+        if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid');
     });
     passwordInput.addEventListener('input', function () {
-        if (/^\d{6}$/.test(this.value.trim())) this.classList.remove('is-invalid');
+        if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid');
     });
 
     // ---------- 登出 ----------
