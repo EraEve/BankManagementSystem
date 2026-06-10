@@ -1,6 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os
+import webbrowser
+import threading
 
 app = Flask(__name__)
 CORS(app)
@@ -11,7 +13,7 @@ TRANSACTION_FILE = os.path.join(BASE_DIR, "data", "transaction.txt")
 
 @app.route('/')
 def home():
-    return "✅ 银行智能管理系统后端运行成功！<br>接口正常工作～"
+    return send_from_directory(BASE_DIR, "index.html")
 
 def text_to_bool(value):
     return value == "1"
@@ -194,9 +196,24 @@ def login():
         "data": account
     })
 
-# -------------------- 【修复 2：自动创建 data 文件夹，避免报错】 --------------------
+# -------------------- 【自动创建 data 文件夹，避免报错】 --------------------
 if not os.path.exists(os.path.join(BASE_DIR, "data")):
     os.makedirs(os.path.join(BASE_DIR, "data"))
 
+# -------------------- 【自动打开浏览器】 --------------------
+def open_browser():
+    webbrowser.open("http://127.0.0.1:5000")
+
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    threading.Timer(1.0, open_browser).start()
+    print("")
+    print("  [Bank System] v2.1 启动成功!")
+    print("  前端页面: http://127.0.0.1:5000")
+    print("  API 接口: http://127.0.0.1:5000/api/")
+    print("  测试账号: 100001 / 123456")
+    print("  测试账号: 100002 / 654321")
+    print("  测试账号: 888888 / 888888 (管理员)")
+    print("")
+    print("  按 Ctrl+C 停止服务")
+    print("")
+    app.run(host="127.0.0.1", port=5000, debug=False)
