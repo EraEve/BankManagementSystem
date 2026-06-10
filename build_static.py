@@ -1,4 +1,30 @@
-<!DOCTYPE html>
+import json
+
+accounts = []
+with open(r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\data\account.txt', 'r', encoding='utf-8') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        parts = line.split('|')
+        if len(parts) != 6: continue
+        accounts.append({'id':parts[0],'name':parts[1],'password':parts[2],'balance':float(parts[3]),'is_locked':parts[4]=='1','is_admin':parts[5]=='1'})
+
+tx_map = {'100001':'202418440201','100002':'202418440202','100003':'202418440203','100004':'202418440204'}
+transactions = []
+with open(r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\data\transaction.txt', 'r', encoding='utf-8') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        parts = line.split('|')
+        if len(parts) != 7: continue
+        transactions.append({'tid':parts[0],'from':tx_map.get(parts[1],parts[1]),'to':tx_map.get(parts[2],parts[2]),'type':parts[3],'amount':float(parts[4]),'time':parts[5],'status':parts[6]})
+
+acc_json = json.dumps(accounts, ensure_ascii=False)
+tx_json = json.dumps(transactions, ensure_ascii=False)
+print(f"Accounts: {len(accounts)}, Transactions: {len(transactions)}")
+
+# Build complete HTML
+html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -7,41 +33,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        :root { --bank-blue: #0d6efd; --bank-deep-blue: #084298; --bank-light-blue: #eef5ff; --soft-gray: #f5f7fb; --text-main: #1f2937; }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; font-family: "Microsoft YaHei", Arial, sans-serif; background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 45%, #e8f1ff 100%); color: var(--text-main); }
-        .hidden { display: none !important; }
-        .login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-        .login-card { width: 100%; max-width: 460px; border: none; border-radius: 24px; overflow: hidden; box-shadow: 0 18px 45px rgba(13,110,253,0.18); }
-        .login-header { padding: 32px 32px 22px; background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; }
-        .login-header .brand-icon { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,0.18); margin-bottom: 16px; }
-        .login-body { background: #fff; padding: 30px 32px 34px; }
-        .form-control { min-height: 48px; border-radius: 14px; }
-        .btn-rounded { min-height: 48px; border-radius: 14px; font-weight: 600; }
-        .topbar { background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; box-shadow: 0 8px 24px rgba(8,66,152,0.22); }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
-        .navbar .nav-link { color: rgba(255,255,255,0.9); border-radius: 12px; padding-left: 14px; padding-right: 14px; }
-        .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff; background: rgba(255,255,255,0.16); }
-        .page-area { padding-top: 30px; padding-bottom: 48px; }
-        .hero-card, .info-card, .table-card, .about-card { border: none; border-radius: 22px; box-shadow: 0 12px 28px rgba(31,41,55,0.08); }
-        .hero-card { color: #fff; background: linear-gradient(135deg, #0d6efd, #3d8bfd); overflow: hidden; }
-        .hero-card .hero-icon { font-size: 84px; opacity: 0.2; }
-        .stat-card { height: 100%; border: none; border-radius: 20px; background: #fff; box-shadow: 0 12px 28px rgba(31,41,55,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(31,41,55,0.12); }
-        .stat-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 22px; color: var(--bank-blue); background: var(--bank-light-blue); }
-        .section-title { font-weight: 700; margin-bottom: 18px; }
-        .section-subtitle { color: #6b7280; margin-bottom: 22px; }
-        .data-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; background: #eef5ff; color: #0d6efd; font-size: 14px; font-weight: 600; }
-        .profile-row { padding: 14px 0; border-bottom: 1px solid #edf0f5; }
-        .profile-row:last-child { border-bottom: none; }
-        .table thead th { white-space: nowrap; background: #eef5ff; color: #084298; }
-        .table tbody td { vertical-align: middle; }
-        .status-success { background: #d1e7dd; color: #0f5132; }
-        .status-failed { background: #f8d7da; color: #842029; }
-        .page-section { animation: fadeIn 0.25s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .footer-note { color: #64748b; font-size: 14px; }
-        @media (max-width: 768px) { .login-header, .login-body { padding-left: 22px; padding-right: 22px; } .page-area { padding-top: 22px; } }
+        :root {{ --bank-blue: #0d6efd; --bank-deep-blue: #084298; --bank-light-blue: #eef5ff; --soft-gray: #f5f7fb; --text-main: #1f2937; }}
+        * {{ box-sizing: border-box; }}
+        body {{ margin: 0; min-height: 100vh; font-family: "Microsoft YaHei", Arial, sans-serif; background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 45%, #e8f1ff 100%); color: var(--text-main); }}
+        .hidden {{ display: none !important; }}
+        .login-wrapper {{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }}
+        .login-card {{ width: 100%; max-width: 460px; border: none; border-radius: 24px; overflow: hidden; box-shadow: 0 18px 45px rgba(13,110,253,0.18); }}
+        .login-header {{ padding: 32px 32px 22px; background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; }}
+        .login-header .brand-icon {{ width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,0.18); margin-bottom: 16px; }}
+        .login-body {{ background: #fff; padding: 30px 32px 34px; }}
+        .form-control {{ min-height: 48px; border-radius: 14px; }}
+        .btn-rounded {{ min-height: 48px; border-radius: 14px; font-weight: 600; }}
+        .topbar {{ background: linear-gradient(135deg, #0d6efd, #084298); color: #fff; box-shadow: 0 8px 24px rgba(8,66,152,0.22); }}
+        .navbar-brand {{ font-weight: 700; letter-spacing: 0.5px; }}
+        .navbar .nav-link {{ color: rgba(255,255,255,0.9); border-radius: 12px; padding-left: 14px; padding-right: 14px; }}
+        .navbar .nav-link:hover, .navbar .nav-link.active {{ color: #fff; background: rgba(255,255,255,0.16); }}
+        .page-area {{ padding-top: 30px; padding-bottom: 48px; }}
+        .hero-card, .info-card, .table-card, .about-card {{ border: none; border-radius: 22px; box-shadow: 0 12px 28px rgba(31,41,55,0.08); }}
+        .hero-card {{ color: #fff; background: linear-gradient(135deg, #0d6efd, #3d8bfd); overflow: hidden; }}
+        .hero-card .hero-icon {{ font-size: 84px; opacity: 0.2; }}
+        .stat-card {{ height: 100%; border: none; border-radius: 20px; background: #fff; box-shadow: 0 12px 28px rgba(31,41,55,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; }}
+        .stat-card:hover {{ transform: translateY(-3px); box-shadow: 0 16px 34px rgba(31,41,55,0.12); }}
+        .stat-icon {{ width: 52px; height: 52px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 22px; color: var(--bank-blue); background: var(--bank-light-blue); }}
+        .section-title {{ font-weight: 700; margin-bottom: 18px; }}
+        .section-subtitle {{ color: #6b7280; margin-bottom: 22px; }}
+        .data-chip {{ display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; background: #eef5ff; color: #0d6efd; font-size: 14px; font-weight: 600; }}
+        .profile-row {{ padding: 14px 0; border-bottom: 1px solid #edf0f5; }}
+        .profile-row:last-child {{ border-bottom: none; }}
+        .table thead th {{ white-space: nowrap; background: #eef5ff; color: #084298; }}
+        .table tbody td {{ vertical-align: middle; }}
+        .status-success {{ background: #d1e7dd; color: #0f5132; }}
+        .status-failed {{ background: #f8d7da; color: #842029; }}
+        .page-section {{ animation: fadeIn 0.25s ease; }}
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(8px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+        .footer-note {{ color: #64748b; font-size: 14px; }}
+        @media (max-width: 768px) {{ .login-header, .login-body {{ padding-left: 22px; padding-right: 22px; }} .page-area {{ padding-top: 22px; }} }}
     </style>
 </head>
 <body>
@@ -150,8 +176,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
 <script>
-var ACCOUNTS = [{"id": "202418440201", "name": "唐楷阳", "password": "0201", "balance": 116899.69, "is_locked": false, "is_admin": false}, {"id": "202418440202", "name": "高展翼", "password": "0202", "balance": 9376.88, "is_locked": false, "is_admin": false}, {"id": "202418440203", "name": "王林艳", "password": "0203", "balance": 53130.13, "is_locked": false, "is_admin": false}, {"id": "202418440204", "name": "王若瑶", "password": "0204", "balance": 44061.88, "is_locked": false, "is_admin": false}, {"id": "202418440205", "name": "李思语", "password": "0205", "balance": 133882.46, "is_locked": false, "is_admin": false}, {"id": "202418440206", "name": "陈雨淇", "password": "0206", "balance": 123422.41, "is_locked": false, "is_admin": false}, {"id": "202418440207", "name": "李文欣", "password": "0207", "balance": 161131.42, "is_locked": false, "is_admin": false}, {"id": "202418440208", "name": "刘正坤", "password": "0208", "balance": 20214.3, "is_locked": false, "is_admin": false}, {"id": "202418440209", "name": "王泓舒", "password": "0209", "balance": 78836.32, "is_locked": false, "is_admin": false}, {"id": "202418440210", "name": "于海超", "password": "0210", "balance": 10214.51, "is_locked": false, "is_admin": false}, {"id": "202418440211", "name": "刘金浩", "password": "0211", "balance": 43261.65, "is_locked": false, "is_admin": false}, {"id": "202418440212", "name": "李拓", "password": "0212", "balance": 93437.18, "is_locked": false, "is_admin": false}, {"id": "202418440213", "name": "刘东", "password": "0213", "balance": 9643.79, "is_locked": false, "is_admin": false}, {"id": "202418440214", "name": "张高赫", "password": "0214", "balance": 39796.59, "is_locked": false, "is_admin": false}, {"id": "202418440215", "name": "耿文晶", "password": "0215", "balance": 118729.78, "is_locked": false, "is_admin": false}, {"id": "202418440216", "name": "陈桐宇", "password": "0216", "balance": 100364.76, "is_locked": false, "is_admin": false}, {"id": "202418440217", "name": "孟庆睿", "password": "0217", "balance": 43577.11, "is_locked": false, "is_admin": false}, {"id": "202418440218", "name": "谷元杰", "password": "0218", "balance": 108121.49, "is_locked": false, "is_admin": true}, {"id": "202418440219", "name": "李延豪", "password": "0219", "balance": 146650.33, "is_locked": false, "is_admin": true}, {"id": "202418440220", "name": "郝璐璐", "password": "0220", "balance": 6137.28, "is_locked": false, "is_admin": false}, {"id": "202418440221", "name": "于名昊", "password": "0221", "balance": 146018.37, "is_locked": false, "is_admin": true}, {"id": "202418440222", "name": "甄建斌", "password": "0222", "balance": 127174.39, "is_locked": false, "is_admin": false}, {"id": "202418440223", "name": "乔国浚", "password": "0223", "balance": 64543.84, "is_locked": false, "is_admin": false}, {"id": "202418440224", "name": "张文杰", "password": "0224", "balance": 32208.91, "is_locked": false, "is_admin": false}, {"id": "202418440225", "name": "宋雨璐", "password": "0225", "balance": 172512.29, "is_locked": false, "is_admin": false}, {"id": "202418440226", "name": "郇梓翔", "password": "0226", "balance": 63904.05, "is_locked": false, "is_admin": false}, {"id": "202418440227", "name": "王若涵", "password": "0227", "balance": 21230.52, "is_locked": false, "is_admin": false}, {"id": "202418440228", "name": "徐然", "password": "0228", "balance": 21925.37, "is_locked": false, "is_admin": false}, {"id": "202418440229", "name": "陈文浩", "password": "0229", "balance": 153311.51, "is_locked": false, "is_admin": false}, {"id": "202418440230", "name": "刘心怡", "password": "0230", "balance": 110652.06, "is_locked": false, "is_admin": false}, {"id": "202418440231", "name": "许建策", "password": "0231", "balance": 146247.45, "is_locked": false, "is_admin": false}, {"id": "202418440232", "name": "许燕薇", "password": "0232", "balance": 132703.06, "is_locked": false, "is_admin": false}, {"id": "202418440233", "name": "顾麦壮", "password": "0233", "balance": 98839.92, "is_locked": false, "is_admin": false}, {"id": "202418440234", "name": "刘兆涵", "password": "0234", "balance": 175295.26, "is_locked": false, "is_admin": false}, {"id": "202418440235", "name": "孔梦寒", "password": "0235", "balance": 71243.52, "is_locked": false, "is_admin": false}, {"id": "202418440236", "name": "傅楷皓", "password": "0236", "balance": 101607.11, "is_locked": false, "is_admin": false}, {"id": "202418440237", "name": "林运磊", "password": "0237", "balance": 150145.82, "is_locked": false, "is_admin": false}, {"id": "202418440238", "name": "王博远", "password": "0238", "balance": 113240.96, "is_locked": false, "is_admin": false}, {"id": "202418440239", "name": "吴跃红", "password": "0239", "balance": 155798.71, "is_locked": false, "is_admin": false}, {"id": "202418440240", "name": "白洁", "password": "0240", "balance": 106036.63, "is_locked": false, "is_admin": false}, {"id": "202418440241", "name": "杨涛铭", "password": "0241", "balance": 128300.07, "is_locked": false, "is_admin": false}, {"id": "202418440242", "name": "王可馨", "password": "0242", "balance": 13019.27, "is_locked": false, "is_admin": false}, {"id": "202418440243", "name": "何晔", "password": "0243", "balance": 44882.2, "is_locked": false, "is_admin": false}, {"id": "202418440244", "name": "王子熙", "password": "0244", "balance": 55642.89, "is_locked": false, "is_admin": false}, {"id": "202418440245", "name": "冶利涛", "password": "0245", "balance": 18963.6, "is_locked": false, "is_admin": false}, {"id": "202418440246", "name": "闫玉敏", "password": "0246", "balance": 45738.41, "is_locked": false, "is_admin": false}, {"id": "202418440247", "name": "连艺淳", "password": "0247", "balance": 22675.25, "is_locked": false, "is_admin": false}, {"id": "202418440248", "name": "武静宇", "password": "0248", "balance": 53645.38, "is_locked": false, "is_admin": false}, {"id": "202418440249", "name": "高愉竣", "password": "0249", "balance": 116244.78, "is_locked": false, "is_admin": false}, {"id": "202418440250", "name": "赵文菁", "password": "0250", "balance": 68845.63, "is_locked": false, "is_admin": false}];
-var TRANSACTIONS = [{"tid": "T001", "from": "202418440201", "to": "系统", "type": "存款", "amount": 5000.0, "time": "2025-04-01 10:25:30", "status": "成功"}, {"tid": "T002", "from": "202418440201", "to": "202418440202", "type": "转账", "amount": 2000.0, "time": "2025-04-05 14:12:18", "status": "成功"}, {"tid": "T003", "from": "202418440201", "to": "系统", "type": "取款", "amount": 1500.0, "time": "2025-04-10 09:05:45", "status": "成功"}, {"tid": "T004", "from": "202418440202", "to": "202418440204", "type": "转账", "amount": 8000.0, "time": "2025-04-12 16:30:22", "status": "失败"}, {"tid": "T005", "from": "202418440202", "to": "系统", "type": "存款", "amount": 10000.0, "time": "2025-04-15 11:40:10", "status": "成功"}, {"tid": "T006", "from": "202418440203", "to": "系统", "type": "存款", "amount": 20000.0, "time": "2025-05-01 08:00:00", "status": "成功"}, {"tid": "T007", "from": "202418440203", "to": "202418440201", "type": "转账", "amount": 5000.0, "time": "2025-05-02 12:00:00", "status": "成功"}, {"tid": "T008", "from": "202418440204", "to": "202418440202", "type": "转账", "amount": 3000.0, "time": "2025-05-03 15:30:00", "status": "成功"}];
+var ACCOUNTS = {acc_json};
+var TRANSACTIONS = {tx_json};
 
 var currentUser = null;
 var loginForm = document.getElementById('login_form');
@@ -165,60 +191,60 @@ var topUserText = document.getElementById('top_user_text');
 var navLinks = document.querySelectorAll('.nav-link[data-page]');
 var pageSections = document.querySelectorAll('.page-section');
 
-function showMessage(el, text, type) {
+function showMessage(el, text, type) {{
     type = type || 'primary';
     el.textContent = text;
     el.classList.remove('hidden');
     el.className = 'alert alert-' + type + ' py-2 px-3 small';
     clearTimeout(el._msgTimer);
-    el._msgTimer = setTimeout(function() { el.classList.add('hidden'); }, 4000);
-}
+    el._msgTimer = setTimeout(function() {{ el.classList.add('hidden'); }}, 4000);
+}}
 
-function formatMoney(amount) {
+function formatMoney(amount) {{
     return '&yen;' + Number(amount || 0).toFixed(2);
-}
+}}
 
-function statusBadge(isLocked) {
+function statusBadge(isLocked) {{
     return isLocked ? '<span class="badge bg-danger">已锁定</span>' : '<span class="badge bg-success">正常</span>';
-}
+}}
 
-function roleBadge(isAdmin) {
+function roleBadge(isAdmin) {{
     return isAdmin ? '<span class="badge bg-primary">管理员</span>' : '<span class="badge bg-secondary">普通用户</span>';
-}
+}}
 
-function txStatusBadge(status) {
+function txStatusBadge(status) {{
     return status === '成功' ? '<span class="badge status-success">成功</span>' : '<span class="badge status-failed">失败</span>';
-}
+}}
 
-loginForm.addEventListener('submit', function(e) {
+loginForm.addEventListener('submit', function(e) {{
     e.preventDefault();
     var accountId = accountIdInput.value.trim();
     var password = passwordInput.value.trim();
-    var isAccountValid = /^\d{4,}$/.test(accountId);
-    var isPasswordValid = /^\d{4,}$/.test(password);
+    var isAccountValid = /^\\d{{4,}}$/.test(accountId);
+    var isPasswordValid = /^\\d{{4,}}$/.test(password);
 
-    if (!isAccountValid) { accountIdInput.classList.add('is-invalid'); return; }
+    if (!isAccountValid) {{ accountIdInput.classList.add('is-invalid'); return; }}
     accountIdInput.classList.remove('is-invalid');
-    if (!isPasswordValid) { passwordInput.classList.add('is-invalid'); return; }
+    if (!isPasswordValid) {{ passwordInput.classList.add('is-invalid'); return; }}
     passwordInput.classList.remove('is-invalid');
 
     var user = null;
-    for (var i = 0; i < ACCOUNTS.length; i++) {
-        if (ACCOUNTS[i].id === accountId && ACCOUNTS[i].password === password) {
+    for (var i = 0; i < ACCOUNTS.length; i++) {{
+        if (ACCOUNTS[i].id === accountId && ACCOUNTS[i].password === password) {{
             user = ACCOUNTS[i];
             break;
-        }
-    }
+        }}
+    }}
 
-    if (!user) {
+    if (!user) {{
         showMessage(loginMessage, '账号或密码错误，请重试！', 'danger');
         return;
-    }
+    }}
 
-    if (user.is_locked) {
+    if (user.is_locked) {{
         showMessage(loginMessage, '账户已锁定，请联系管理员', 'danger');
         return;
-    }
+    }}
 
     currentUser = user;
     loginArea.classList.add('hidden');
@@ -228,36 +254,36 @@ loginForm.addEventListener('submit', function(e) {
     renderAccountPage();
     renderTransactionPage();
     showMessage(loginMessage, '登录成功！欢迎 ' + user.name, 'success');
-});
+}});
 
-accountIdInput.addEventListener('input', function() { if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid'); });
-passwordInput.addEventListener('input', function() { if (/^\d{4,}$/.test(this.value.trim())) this.classList.remove('is-invalid'); });
+accountIdInput.addEventListener('input', function() {{ if (/^\\d{{4,}}$/.test(this.value.trim())) this.classList.remove('is-invalid'); }});
+passwordInput.addEventListener('input', function() {{ if (/^\\d{{4,}}$/.test(this.value.trim())) this.classList.remove('is-invalid'); }});
 
-logoutBtn.addEventListener('click', function() {
+logoutBtn.addEventListener('click', function() {{
     currentUser = null;
     systemArea.classList.add('hidden');
     loginArea.classList.remove('hidden');
     loginForm.reset();
     showMessage(loginMessage, '已成功登出', 'info');
-});
+}});
 
-navLinks.forEach(function(link) {
-    link.addEventListener('click', function() {
-        navLinks.forEach(function(l) { l.classList.remove('active'); });
+navLinks.forEach(function(link) {{
+    link.addEventListener('click', function() {{
+        navLinks.forEach(function(l) {{ l.classList.remove('active'); }});
         this.classList.add('active');
         var targetPage = this.getAttribute('data-page');
-        pageSections.forEach(function(s) { s.classList.add('hidden'); if (s.id === targetPage) s.classList.remove('hidden'); });
-    });
-});
+        pageSections.forEach(function(s) {{ s.classList.add('hidden'); if (s.id === targetPage) s.classList.remove('hidden'); }});
+    }});
+}});
 
-function renderDashboard() {
+function renderDashboard() {{
     document.getElementById('account_count').textContent = ACCOUNTS.length;
     document.getElementById('transaction_count').textContent = TRANSACTIONS.length;
-    var total = TRANSACTIONS.reduce(function(s, t) { return s + (Number(t.amount) || 0); }, 0);
+    var total = TRANSACTIONS.reduce(function(s, t) {{ return s + (Number(t.amount) || 0); }}, 0);
     document.getElementById('transaction_amount').textContent = formatMoney(total);
-}
+}}
 
-function renderAccountPage() {
+function renderAccountPage() {{
     if (!currentUser) return;
     document.getElementById('profile_account_id').textContent = currentUser.id;
     document.getElementById('profile_name').textContent = currentUser.name;
@@ -266,29 +292,36 @@ function renderAccountPage() {
     document.getElementById('profile_role').innerHTML = roleBadge(currentUser.is_admin);
     var tbody = document.getElementById('account_table_body');
     tbody.innerHTML = '';
-    ACCOUNTS.forEach(function(acc) {
+    ACCOUNTS.forEach(function(acc) {{
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + acc.id + '</td><td>' + acc.name + '</td><td>' + formatMoney(acc.balance) + '</td><td>' + statusBadge(acc.is_locked) + '</td><td>' + roleBadge(acc.is_admin) + '</td>';
         tbody.appendChild(tr);
-    });
-}
+    }});
+}}
 
-function renderTransactionPage() {
+function renderTransactionPage() {{
     if (!currentUser) return;
     var tbody = document.getElementById('transaction_table_body');
     var countEl = document.getElementById('my_transaction_count');
-    var myTx = TRANSACTIONS.filter(function(tx) { return tx.from === currentUser.id || tx.to === currentUser.id; });
+    var myTx = TRANSACTIONS.filter(function(tx) {{ return tx.from === currentUser.id || tx.to === currentUser.id; }});
     countEl.textContent = '共 ' + myTx.length + ' 条';
     tbody.innerHTML = '';
-    if (myTx.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td></tr>'; return; }
-    myTx.forEach(function(tx) {
+    if (myTx.length === 0) {{ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">暂无交易记录</td></tr>'; return; }}
+    myTx.forEach(function(tx) {{
         var icon = tx.type === '存款' ? 'arrow-down' : tx.type === '取款' ? 'arrow-up' : 'arrow-right-left';
         var target = tx.type === '存款' ? tx.from : tx.to;
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + tx.tid + '</td><td><i class="fa-solid fa-' + icon + ' text-primary me-1"></i>' + tx.type + '</td><td>' + formatMoney(tx.amount) + '</td><td>' + target + '</td><td>' + tx.time + '</td><td>' + txStatusBadge(tx.status) + '</td>';
         tbody.appendChild(tr);
-    });
-}
+    }});
+}}
 </script>
 </body>
-</html>
+</html>'''
+
+output_path = r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\index.html'
+with open(output_path, 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print(f'Written: {output_path}')
+print(f'Size: {len(html.encode("utf-8"))} bytes')
