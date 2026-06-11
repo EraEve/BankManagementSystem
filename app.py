@@ -56,16 +56,18 @@ else:
 
 # Detect deployment environment
 _is_render = bool(os.environ.get("RENDER"))
-_is_production = _is_render or os.environ.get("FLASK_ENV") == "production"
+_is_pythonanywhere = bool(os.environ.get("PYTHONANYWHERE_SITE") or os.environ.get("PYTHONANYWHERE_DOMAIN"))
+_is_production = _is_render or _is_pythonanywhere or os.environ.get("FLASK_ENV") == "production"
 
 # Session cookie config — SameSite=None for cross-origin (GitHub Pages → Render)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SECURE"] = _is_production       # HTTPS only in prod
 app.config["SESSION_COOKIE_SAMESITE"] = "None" if _is_production else "Lax"
 
-# CORS: regex origins for cross-origin credentials (GitHub Pages, local dev)
+# CORS: regex origins for cross-origin credentials (GitHub Pages, local dev, PythonAnywhere)
 CORS(app, origins=[
     r"https://.*\.github\.io",
+    r"https://.*\.pythonanywhere\.com",
     r"http://localhost:\d+",
     r"http://127\.0\.0\.1:\d+",
 ], supports_credentials=True)
