@@ -834,6 +834,50 @@ def api_login():
 
         return jsonify({"success": False, "message": "账号或密码错误"}), 401
 
+@app.route("/api/session", methods=["GET"])
+def api_session():
+    """Return current user info from Flask session, or 401 if not logged in."""
+    if "user" not in session:
+        return jsonify({"success": False, "message": "未登录"}), 401
+
+    u = session["user"]
+    role = u.get("role", "customer")
+    uid = u.get("id", "")
+
+    result = {"id": uid, "name": u.get("name", ""), "role": role}
+
+    if role in ("admin", "employee"):
+        employees = read_employees()
+        for emp in employees:
+            if emp["id"] == uid:
+                result["department"] = emp.get("department", "")
+                break
+    else:  # customer
+        customers = read_customers()
+        for c in customers:
+            if c["id"] == uid:
+                result.update({
+                    "type": c["type"],
+                    "credit_score": c["credit_score"],
+                    "financial_assets": c["financial_assets"],
+                    "phone": c.get("phone", ""),
+                    "address": c.get("address", ""),
+                    "id_card": c.get("id_card", "")
+                })
+                break
+        if "type" not in result:
+            accounts = read_accounts()
+            for acc in accounts:
+                if acc["id"] == uid:
+                    result.update({
+                        "type": "普通", "credit_score": 600,
+                        "financial_assets": acc.get("balance", 0)
+                    })
+                    break
+
+    return jsonify({"success": True, "data": result})
+
+
 @app.route("/api/logout", methods=["POST"])
 def api_logout():
     session.pop("user", None)
