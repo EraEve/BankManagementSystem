@@ -122,7 +122,7 @@ def login_required(f):
 def verify_password(plain, stored):
     """Check plaintext password against stored (plaintext or hashed).
     Returns (is_valid, needs_rehash)."""
-    if stored.startswith("pbkdf2:sha256:"):
+    if stored.startswith("pbkdf2:sha256:") or stored.startswith("scrypt:"):
         return check_password_hash(stored, plain), False
     # Legacy plaintext — valid, but needs migration
     return (plain == stored), (plain == stored)
@@ -1925,7 +1925,7 @@ def api_verify_all_customers():
 @app.route("/api/dashboard", methods=["GET"])
 @login_required
 def api_dashboard():
-    """Overview statistics for the dashboard."""
+    """Overview statistics for the dashboard (admin/employee)."""
     employees = read_employees()
     active_employees = [e for e in employees if e.get("is_active", True)]
     customers = read_customers()
@@ -1935,6 +1935,71 @@ def api_dashboard():
     transactions = read_transactions()
     total_txn_amount = sum(t["amount"] for t in transactions if t.get("status") == "成功")
 
+    # Queue status
+    queue_vip_size = len(vip_queue)
+    queue_normal_size = len(normal_queue)
+
+    # Large transaction anomalies
+    large_anomalies = [t for t in transactions if t["amount"] > LARGE_AMOUNT]
+    anomaly_large_count = len(large_anomalies)
+
+    # High-frequency anomalies (sliding window: >MULTI_TRANSACTION in same hour)
+    cust_txns = {}
+    for t in transactions:
+        for key in [t.get("from_card",""), t.get("to_card",""), t.get("from",""), t.get("to","")]:
+            if key and key != "系统" and key != "-":
+                cust_txns.setdefault(key, []).append(t)
+    anomaly_freq_count = 0
+    for cust_id, txns in cust_txns.items():
+        if len(txns) <= MULTI_TRANSACTION:
+            continue
+        txns_sorted = sorted(txns, key=lambda x: x["time"])
+        for i in range(len(txns_sorted)):
+            count = 1
+            for j in range(i+1, len(txns_sorted)):
+                if txns_sorted[i]["time"][:13] == txns_sorted[j]["time"][:13]:
+                    count += 1
+                else:
+                    break
+            if count > MULTI_TRANSACTION:
+                anomaly_freq_count += 1
+                break
+
+    # Total daily interest
+    total_interest = 0
+    for card in active_cards:
+        total_interest += calc_daily_interest(card)
+
+    # Branch count
+    branches = read_branches()
+    branch_count = len(branches)
+
+    # Today's transactions
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_txns = [t for t in transactions if t["time"].startswith(today)]
+    today_txn_total = sum(t["amount"] for t in today_txns if t.get("status") == "成功")
+
+    # Transaction type summary
+    txn_summary = {"存款": {"count": 0, "total": 0}, "取款": {"count": 0, "total": 0},
+                   "转账": {"count": 0, "total": 0}, "贷款": {"count": 0, "total": 0},
+                   "还款": {"count": 0, "total": 0}}
+    for t in transactions:
+        ttype = t.get("type", "")
+        if ttype in txn_summary:
+            txn_summary[ttype]["count"] += 1
+            if t.get("status") == "成功":
+                txn_summary[ttype]["total"] += t["amount"]
+
+    # Credit rating distribution
+    rating_dist = {}
+    for c in active_customers:
+        rating = get_credit_rating(c.get("credit_score", 600))
+        rating_dist[rating] = rating_dist.get(rating, 0) + 1
+
+    # Recent 5 transactions
+    txns_sorted = sorted(transactions, key=lambda x: x["time"], reverse=True)
+    recent_txns = txns_sorted[:5]
+
     return jsonify({"success": True, "data": {
         "employee_count": len(active_employees),
         "customer_count": len(active_customers),
@@ -1942,7 +2007,97 @@ def api_dashboard():
         "transaction_count": len(transactions),
         "total_transaction_amount": round(total_txn_amount, 2),
         "vip_count": sum(1 for c in active_customers if c.get("type") == "VIP"),
-        "normal_count": sum(1 for c in active_customers if c.get("type") != "VIP")
+        "normal_count": sum(1 for c in active_customers if c.get("type") != "VIP"),
+        "queue_vip": queue_vip_size,
+        "queue_normal": queue_normal_size,
+        "anomaly_large_count": anomaly_large_count,
+        "anomaly_freq_count": anomaly_freq_count,
+        "total_interest_daily": round(total_interest, 2),
+        "branch_count": branch_count,
+        "today_txn_count": len(today_txns),
+        "today_txn_total": round(today_txn_total, 2),
+        "txn_summary": txn_summary,
+        "rating_distribution": rating_dist,
+        "recent_txns": recent_txns
+    }})
+
+@app.route("/api/dashboard/customer", methods=["GET"])
+@login_required
+def api_dashboard_customer():
+    """Customer-specific dashboard aggregates."""
+    customer_id = session.get("user_id", "")
+    cards = read_cards()
+    transactions = read_transactions()
+
+    # My cards
+    my_cards = [c for c in cards if c.get("customer_id") == customer_id]
+    total_balance = sum(c.get("balance", 0) for c in my_cards if c.get("status") == "正常")
+    card_count = len([c for c in my_cards if c.get("status") == "正常"])
+
+    # Daily interest for my cards
+    my_interest = sum(calc_daily_interest(c) for c in my_cards if c.get("status") == "正常")
+
+    # My transactions
+    my_card_ids = [c["id"] for c in my_cards]
+    my_txns = [t for t in transactions if
+               t.get("from_card") in my_card_ids or t.get("to_card") in my_card_ids or
+               t.get("from") == customer_id or t.get("to") == customer_id]
+    my_txn_count = len(my_txns)
+
+    # Recent 5
+    my_txns_sorted = sorted(my_txns, key=lambda x: x["time"], reverse=True)
+    recent_txns = my_txns_sorted[:5]
+
+    # This month's transaction count
+    this_month = datetime.now().strftime("%Y-%m")
+    month_txns = [t for t in my_txns if t["time"].startswith(this_month)]
+
+    # Investment allocation
+    customer = None
+    for c in read_customers():
+        if c["id"] == customer_id:
+            customer = c
+            break
+    cards_for_invest = read_cards()
+    if customer:
+        available_cash = sum(cd.get("balance", 0) for cd in cards_for_invest
+                           if cd["customer_id"] == customer_id and cd["type"] != "信用卡")
+        credit_score = customer.get("credit_score", 600)
+        if credit_score > 750:
+            risk = "进取型"
+            allocation = {"股票型基金": round(available_cash * 0.4, 2),
+                          "债券型基金": round(available_cash * 0.2, 2),
+                          "定期存款": round(available_cash * 0.2, 2),
+                          "活期备用": round(available_cash * 0.2, 2)}
+        elif credit_score > 600:
+            risk = "稳健型"
+            allocation = {"债券型基金": round(available_cash * 0.35, 2),
+                          "定期存款": round(available_cash * 0.35, 2),
+                          "货币基金": round(available_cash * 0.15, 2),
+                          "活期备用": round(available_cash * 0.15, 2)}
+        else:
+            risk = "保守型"
+            allocation = {"定期存款": round(available_cash * 0.5, 2),
+                          "货币基金": round(available_cash * 0.25, 2),
+                          "活期备用": round(available_cash * 0.25, 2)}
+    else:
+        available_cash = total_balance
+        risk = "保守型"
+        allocation = {"定期存款": round(total_balance * 0.5, 2),
+                      "货币基金": round(total_balance * 0.25, 2),
+                      "活期备用": round(total_balance * 0.25, 2)}
+
+    return jsonify({"success": True, "data": {
+        "total_balance": round(total_balance, 2),
+        "card_count": card_count,
+        "my_cards": my_cards,
+        "daily_interest": round(my_interest, 4),
+        "transaction_count": my_txn_count,
+        "month_txn_count": len(month_txns),
+        "recent_txns": recent_txns,
+        "available_cash": round(available_cash, 2),
+        "risk_preference": risk,
+        "allocation": allocation
     }})
 
 @app.route("/api/accounts", methods=["GET"])

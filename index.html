@@ -38,6 +38,29 @@ body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",Arial,sans-serif;ba
 .profile-row:last-child{border-bottom:none}
 .nav-tabs .nav-link{font-size:14px;padding:8px 16px;border-radius:10px 10px 0 0}
 @media(max-width:768px){.login-header,.login-body{padding-left:18px;padding-right:18px}.page-area{padding-top:16px}}
+/* Dashboard charts */
+.dash-bar-chart{display:flex;flex-direction:column;gap:10px}
+.dash-bar-row{display:flex;align-items:center;gap:10px}
+.dash-bar-label{width:50px;font-size:12px;text-align:right;font-weight:600;white-space:nowrap;color:var(--text-main)}
+.dash-bar-track{flex:1;background:#e9ecef;border-radius:6px;height:22px;overflow:hidden}
+.dash-bar-fill{height:100%;border-radius:6px;transition:width 0.7s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;color:#fff;font-weight:600;min-width:2px;white-space:nowrap}
+.dash-donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.dash-donut{width:140px;height:140px;border-radius:50%;position:relative;flex-shrink:0;transition:transform 0.2s}
+.dash-donut:hover{transform:scale(1.05)}
+.dash-donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.dash-donut-center .total-count{font-size:22px;font-weight:800;color:var(--text-main)}
+.dash-donut-center .total-label{font-size:11px;color:#6c757d}
+.dash-legend{font-size:12px;display:flex;flex-direction:column;gap:5px}
+.dash-legend-item{display:flex;align-items:center;gap:6px}
+.dash-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dash-alert-card{border:none;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:0}
+.dash-alert-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.dash-queue-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #edf0f5}
+.dash-queue-row:last-child{border-bottom:none}
+.dash-queue-badge{padding:4px 10px;border-radius:14px;font-size:12px;font-weight:600}
+.dash-card-mini{border:1px solid #edf0f5;border-radius:12px;padding:10px 14px;margin-bottom:8px;transition:box-shadow 0.15s}
+.dash-card-mini:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.dash-card-mini:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -227,7 +250,42 @@ function dashboardPage(){
     return h;
 }
 function dashboardGrid(){
-    return '<div class="row g-3" id="dash_stats">'+statCard('职员数','employee_count','user-tie')+statCard('客户数','customer_count','users')+statCard('银行卡数','card_count','credit-card')+statCard('交易数','transaction_count','receipt')+statCard('交易总额','total_amount','sack-dollar')+statCard('VIP客户','vip_count','crown')+'</div>';
+    var h='';
+    // Row 1: Quick action buttons
+    h+='<div class="row g-3 mb-3"><div class="col-12"><div class="d-flex flex-wrap gap-2">';
+    h+='<button class="btn btn-outline-primary btn-sm rounded-pill" onclick="navigate(\'trade\')"><i class="fa-solid fa-money-bill-transfer me-1"></i>办理业务</button>';
+    h+='<button class="btn btn-outline-success btn-sm rounded-pill" onclick="navigate(\'customer\')"><i class="fa-solid fa-user-plus me-1"></i>添加客户</button>';
+    h+='<button class="btn btn-outline-warning btn-sm rounded-pill" onclick="navigate(\'queue\')"><i class="fa-solid fa-ticket me-1"></i>排队取号</button>';
+    h+='<button class="btn btn-outline-info btn-sm rounded-pill" onclick="navigate(\'query\')"><i class="fa-solid fa-magnifying-glass me-1"></i>业务查询</button>';
+    if(currentUser.role==='admin')h+='<button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="navigate(\'smart\')"><i class="fa-solid fa-brain me-1"></i>智能分析</button>';
+    h+='</div></div></div>';
+
+    // Row 2: 6 stat cards
+    h+='<div class="row g-3" id="dash_stats">';
+    h+=statCard('职员数','employee_count','user-tie');
+    h+=statCard('客户数','customer_count','users');
+    h+=statCard('银行卡数','card_count','credit-card');
+    h+=statCard('交易数','transaction_count','receipt');
+    h+=statCard('交易总额','total_amount','sack-dollar');
+    h+=statCard('VIP客户','vip_count','crown');
+    h+='</div>';
+
+    // Row 3: Recent Transactions + Queue Status
+    h+='<div class="row g-3 mt-2">';
+    h+='<div class="col-lg-8"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>最近交易</h5><div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead><tr><th>ID</th><th>类型</th><th>金额</th><th>对象</th><th>时间</th><th>状态</th></tr></thead><tbody id="dash_recent_txns"></tbody></table></div></div></div></div>';
+    h+='<div class="col-lg-4"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-people-line text-warning me-2"></i>排队概览</h5><div id="dash_queue"></div></div></div></div>';
+    h+='</div>';
+
+    // Row 4: Bar Chart + Donut
+    h+='<div class="row g-3 mt-2">';
+    h+='<div class="col-lg-7"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-chart-simple text-success me-2"></i>交易类型分布</h5><div id="dash_txn_chart"></div></div></div></div>';
+    h+='<div class="col-lg-5"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-chart-pie text-info me-2"></i>信用评级分布</h5><div id="dash_credit_donut" class="dash-donut-wrap"></div></div></div></div>';
+    h+='</div>';
+
+    // Row 5: System Health Alerts
+    h+='<div class="row g-3 mt-2" id="dash_alerts"></div>';
+
+    return h;
 }
 function statCard(label,id,icon){
     return '<div class="col-md-4 col-lg-2"><div class="card stat-card"><div class="card-body p-3 text-center"><div class="stat-icon mx-auto mb-2"><i class="fa-solid fa-'+icon+'"></i></div><p class="text-secondary small mb-1">'+label+'</p><h4 class="fw-bold mb-0" id="'+id+'">-</h4></div></div></div>';
@@ -720,8 +778,41 @@ async function doVerifyAll(){
 
 // --- Customer Self-Service Pages ---
 function myDashboardPage(){
-    return '<div class="card hero-card mb-3"><div class="card-body p-4"><h1 class="fw-bold">欢迎, '+currentUser.name+'</h1><p class="mb-0 opacity-75">'+currentUser.type+'客户 | 信用评分: '+currentUser.credit_score+'</p></div></div>'+
-    '<div class="row g-3" id="my_dash"><div class="col-md-4"><div class="card stat-card"><div class="card-body p-3"><div class="stat-icon mb-2"><i class="fa-solid fa-wallet"></i></div><p class="text-secondary small mb-1">金融资产</p><h4 class="fw-bold mb-0">'+fmt(currentUser.financial_assets||currentUser.balance||0)+'</h4></div></div></div></div>';
+    var h='';
+    // Row 1: Enhanced hero card
+    h+='<div class="card hero-card mb-3"><div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap">';
+    h+='<div><h1 class="fw-bold mb-1">欢迎, '+esc(currentUser.name)+'</h1>';
+    h+='<p class="mb-0 opacity-75">'+(currentUser.type||'普通')+'客户 | 信用评分: <b>'+(currentUser.credit_score||'-')+'</b> | 客户编号: '+esc(currentUser.id)+'</p></div>';
+    h+='<div class="text-end d-none d-md-block"><div class="stat-icon mx-auto mb-1" style="background:rgba(255,255,255,0.25);color:#fff"><i class="fa-solid fa-building-columns"></i></div><small class="opacity-75">银行智能管理系统 v3.1</small></div>';
+    h+='</div></div>';
+
+    // Row 2: Quick Action Buttons
+    h+='<div class="row g-3 mb-3"><div class="col-12"><div class="d-flex flex-wrap gap-2">';
+    h+='<button class="btn btn-success btn-sm rounded-pill" onclick="quickAction(\'deposit\')"><i class="fa-solid fa-circle-down me-1"></i>存款</button>';
+    h+='<button class="btn btn-danger btn-sm rounded-pill" onclick="quickAction(\'withdraw\')"><i class="fa-solid fa-circle-up me-1"></i>取款</button>';
+    h+='<button class="btn btn-primary btn-sm rounded-pill" onclick="quickAction(\'transfer\')"><i class="fa-solid fa-right-left me-1"></i>转账</button>';
+    h+='<button class="btn btn-outline-info btn-sm rounded-pill" onclick="navigate(\'mytrans\')"><i class="fa-solid fa-clock-rotate-left me-1"></i>交易记录</button>';
+    h+='<button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="navigate(\'myinvest\')"><i class="fa-solid fa-chart-line me-1"></i>投资顾问</button>';
+    h+='</div></div></div>';
+
+    // Row 3: Financial Overview Cards
+    h+='<div class="row g-3 mb-3" id="cust_fin_cards">';
+    h+=statCard('总余额','cust_balance','wallet');
+    h+=statCard('银行卡数','cust_card_cnt','credit-card');
+    h+=statCard('日利息','cust_interest','percent');
+    h+=statCard('本月交易','cust_month_txn','receipt');
+    h+='</div>';
+
+    // Row 4: Recent Transactions + Card Summary
+    h+='<div class="row g-3">';
+    h+='<div class="col-lg-7"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>最近交易</h5><div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead><tr><th>ID</th><th>类型</th><th>金额</th><th>时间</th><th>状态</th></tr></thead><tbody id="cust_recent_txns"></tbody></table></div></div></div></div>';
+    h+='<div class="col-lg-5"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-credit-card text-info me-2"></i>我的银行卡</h5><div id="cust_card_list"></div></div></div></div>';
+    h+='</div>';
+
+    // Row 5: Investment Preview
+    h+='<div class="row g-3 mt-2"><div class="col-12"><div class="card card-custom"><div class="card-body p-3"><h5 class="fw-bold mb-2"><i class="fa-solid fa-chart-line text-success me-2"></i>投资概览 <small class="text-secondary fw-normal">('+(currentUser.type==='VIP'?'VIP专属':'基于信用评分')+')</small></h5><div id="cust_invest_preview" class="small">加载中...</div></div></div></div></div>';
+
+    return h;
 }
 function myProfilePage(){return '<h3 class="section-title">个人信息</h3><div class="card card-custom"><div class="card-body p-3" id="my_profile_data">加载中...</div></div>';}
 async function loadMyProfile(){
@@ -770,18 +861,171 @@ async function loadMyInvest(){
     for(var k in d.allocation){h+=k+': '+fmt(d.allocation[k])+'<br>';}$('my_invest_result').innerHTML=h;
 }
 
+// --- Customer Dashboard Loader ---
+async function loadCustomerDashboard(){
+    var r=await api('/api/dashboard/customer');if(!r.success)return;
+    var d=r.data;
+    // Financial cards
+    var set=function(id,v){var el=$(id);if(el)el.textContent=v;};
+    set('cust_balance',fmt(d.total_balance));
+    set('cust_card_cnt',d.card_count);
+    set('cust_interest',fmtNum(d.daily_interest)+' /天');
+    set('cust_month_txn',d.month_txn_count+' 笔');
+    // Recent transactions
+    renderCustRecentTxns(d.recent_txns);
+    // Card list
+    renderCustCardList(d.my_cards);
+    // Investment preview
+    renderCustInvest(d);
+}
+function renderCustRecentTxns(txns){
+    var tbody=$('cust_recent_txns');if(!tbody)return;
+    if(!txns||txns.length===0){tbody.innerHTML='<tr><td colspan="5" class="text-center py-2 text-secondary small">暂无交易</td></tr>';return;}
+    tbody.innerHTML='';
+    txns.forEach(function(tx){var tr=document.createElement('tr');
+        var icon='receipt';if(tx.type==='存款')icon='circle-down text-success';else if(tx.type==='取款')icon='circle-up text-danger';else if(tx.type==='转账')icon='right-left text-primary';else if(tx.type==='贷款')icon='hand-holding-dollar text-warning';else if(tx.type==='还款')icon='rotate-left text-info';
+        tr.innerHTML='<td><small>'+esc(tx.id)+'</small></td><td><i class="fa-solid fa-'+icon+' me-1 small"></i>'+esc(tx.type)+'</td><td class="fw-semibold">'+fmt(tx.amount)+'</td><td><small>'+esc(tx.time)+'</small></td><td>'+(tx.status==='成功'?bad('成功'):bad('失败','warn'))+'</td>';
+        tbody.appendChild(tr);
+    });
+}
+function renderCustCardList(cards){
+    var el=$('cust_card_list');if(!el)return;
+    if(!cards||cards.length===0){el.innerHTML='<p class="text-secondary small mb-0">暂无银行卡</p>';return;}
+    var h='';cards.forEach(function(c){
+        var typeIcon=c.type==='信用卡'?'credit-card text-warning':c.type==='储蓄卡'?'piggy-bank text-success':'wallet text-primary';
+        var statusCls=c.status==='正常'?'badge-status-ok':'badge-status-fail';
+        h+='<div class="dash-card-mini"><div class="d-flex justify-content-between align-items-center"><div><i class="fa-solid fa-'+typeIcon+' me-2"></i><span class="fw-semibold small">'+esc(c.id)+'</span><span class="badge '+statusCls+' ms-2" style="font-size:10px">'+esc(c.status)+'</span></div><span class="fw-bold">'+fmt(c.balance)+'</span></div><div class="small text-secondary mt-1">'+esc(c.type)+(c.type==='信用卡'?' | 额度:'+fmt(c.credit_limit):'')+' | 利率:'+c.interest_rate+'%</div></div>';
+    });
+    el.innerHTML=h;
+}
+function renderCustInvest(d){
+    var el=$('cust_invest_preview');if(!el)return;
+    if(!d.risk_preference){el.innerHTML='<p class="text-secondary mb-0">暂无投资建议</p>';return;}
+    var colors={'股票型基金':'#dc3545','债券型基金':'#0d6efd','货币基金':'#6f42c1','定期存款':'#198754','活期备用':'#fd7e14'};
+    var h='<div class="mb-3"><span class="fw-semibold">可用资金: </span><b>'+fmt(d.available_cash||d.total_balance)+'</b> ';
+    h+='<span class="fw-semibold ms-3">风险偏好: </span><span class="badge bg-primary">'+d.risk_preference+'</span></div>';
+    if(d.allocation){
+        h+='<div class="dash-bar-chart">';
+        var maxAmt=0;for(var k in d.allocation){if(d.allocation[k]>maxAmt)maxAmt=d.allocation[k];}
+        for(var k in d.allocation){
+            var pct=maxAmt>0?(d.allocation[k]/maxAmt*100):0;
+            var c=colors[k]||'#6c757d';
+            h+='<div class="dash-bar-row">';
+            h+='<span class="dash-bar-label">'+k+'</span>';
+            h+='<div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+c+'">'+(pct>15?fmt(d.allocation[k]):'')+'</div></div>';
+            h+='</div>';
+        }
+        h+='</div>';
+    }
+    h+='<p class="small text-secondary mt-2 mb-0"><i class="fa-solid fa-lightbulb me-1 text-warning"></i>提示: 切换至"投资顾问"页面获取详细分析</p>';
+    el.innerHTML=h;
+}
+function quickAction(type){
+    // Navigate to trade page and focus the correct input
+    navigate('mytrade');
+    setTimeout(function(){
+        var input=$(type+'_amount');
+        if(input){input.focus();input.scrollIntoView({behavior:'smooth',block:'center'});}
+    },200);
+}
+
 // --- About Page ---
-function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3><div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.0 · 第十组 · C++全功能Web实现</p></div></div>';}
+function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3><div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages + PythonAnywhere</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.1 · 第十组 · C++全功能Web实现</p></div></div>';}
 
 // --- Dashboard Loader ---
 async function loadDashboard(){
-    if(currentUser.role==='customer')return;
+    if(currentUser.role==='customer'){loadCustomerDashboard();return;}
     var r=await api('/api/dashboard');if(!r.success)return;
     var d=r.data;
+    // 6 stat cards
     var set=function(id,v){var el=$(id);if(el)el.textContent=v;};
     set('employee_count',d.employee_count);set('customer_count',d.customer_count);
     set('card_count',d.card_count);set('transaction_count',d.transaction_count);
     set('total_amount',fmt(d.total_transaction_amount));set('vip_count',d.vip_count);
+    // Widgets
+    renderDashRecentTxns(d.recent_txns);
+    renderDashQueue(d);
+    renderDashTxnChart(d.txn_summary);
+    renderDashCreditDonut(d.rating_distribution);
+    renderDashAlerts(d);
+}
+function renderDashRecentTxns(txns){
+    var tbody=$('dash_recent_txns');if(!tbody)return;
+    if(!txns||txns.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center py-2 text-secondary small">暂无交易</td></tr>';return;}
+    tbody.innerHTML='';
+    txns.forEach(function(tx){var tr=document.createElement('tr');
+        var icon='receipt';if(tx.type==='存款')icon='circle-down text-success';else if(tx.type==='取款')icon='circle-up text-danger';else if(tx.type==='转账')icon='right-left text-primary';else if(tx.type==='贷款')icon='hand-holding-dollar text-warning';else if(tx.type==='还款')icon='rotate-left text-info';
+        tr.innerHTML='<td><small>'+esc(tx.id)+'</small></td><td><i class="fa-solid fa-'+icon+' me-1 small"></i>'+esc(tx.type)+'</td><td class="fw-semibold">'+fmt(tx.amount)+'</td><td><small>'+esc(tx.to_card||tx.to||'-')+'</small></td><td><small>'+esc(tx.time)+'</small></td><td>'+(tx.status==='成功'?bad('成功'):bad('失败','warn'))+'</td>';
+        tbody.appendChild(tr);
+    });
+}
+function renderDashQueue(d){
+    var el=$('dash_queue');if(!el)return;
+    var h='';
+    h+='<div class="dash-queue-row"><span class="fw-semibold"><i class="fa-solid fa-crown text-warning me-1"></i>VIP队列</span><span class="dash-queue-badge" style="background:#fff3cd;color:#856404">'+(d.queue_vip||0)+' 人等待</span></div>';
+    h+='<div class="dash-queue-row"><span class="fw-semibold"><i class="fa-solid fa-user text-secondary me-1"></i>普通队列</span><span class="dash-queue-badge" style="background:#e9ecef;color:#495057">'+(d.queue_normal||0)+' 人等待</span></div>';
+    h+='<div class="dash-queue-row"><span class="fw-semibold"><i class="fa-solid fa-calendar-day text-primary me-1"></i>今日交易</span><span class="small">'+(d.today_txn_count||0)+' 笔 / '+fmt(d.today_txn_total||0)+'</span></div>';
+    h+='<div class="dash-queue-row"><span class="fw-semibold"><i class="fa-solid fa-building-columns text-info me-1"></i>网点数</span><span class="small">'+(d.branch_count||0)+' 个</span></div>';
+    h+='<div class="dash-queue-row"><span class="fw-semibold"><i class="fa-solid fa-percent text-success me-1"></i>日利息总额</span><span class="small">'+fmtNum(d.total_interest_daily||0)+' 元</span></div>';
+    el.innerHTML=h;
+}
+function renderDashTxnChart(summary){
+    var el=$('dash_txn_chart');if(!el)return;
+    if(!summary){el.innerHTML='<p class="text-secondary small mb-0">暂无数据</p>';return;}
+    var colors={'存款':'#198754','取款':'#dc3545','转账':'#0d6efd','贷款':'#fd7e14','还款':'#6f42c1'};
+    var entries=[];for(var k in summary){entries.push({name:k,count:summary[k].count,total:summary[k].total});}
+    var maxTotal=0;entries.forEach(function(e){if(e.total>maxTotal)maxTotal=e.total;});
+    var h='<div class="dash-bar-chart">';
+    entries.forEach(function(e){
+        var pct=maxTotal>0?(e.total/maxTotal*100):0;
+        var c=colors[e.name]||'#6c757d';
+        h+='<div class="dash-bar-row">';
+        h+='<span class="dash-bar-label">'+e.name+'</span>';
+        h+='<div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+c+'">'+(pct>15?fmt(e.total):'')+'</div></div>';
+        h+='<span style="font-size:11px;width:40px;text-align:left;white-space:nowrap">'+e.count+'笔</span>';
+        h+='</div>';
+    });
+    h+='</div>';el.innerHTML=h;
+}
+function renderDashCreditDonut(dist){
+    var el=$('dash_credit_donut');if(!el)return;
+    if(!dist||Object.keys(dist).length===0){el.innerHTML='<p class="text-secondary small mb-0">暂无评级数据</p>';return;}
+    var colors={'AAA (极优)':'#198754','AA (优秀)':'#0d6efd','A (良好)':'#6f42c1','B (一般)':'#fd7e14','C (需关注)':'#dc3545'};
+    var total=0;for(var k in dist){total+=dist[k];}
+    // Build conic-gradient
+    var parts=[];var cum=0;
+    for(var k in dist){
+        var pct=dist[k]/total*100;
+        var c=colors[k]||'#adb5bd';
+        parts.push(c+' '+cum+'% '+(cum+pct)+'%');
+        cum+=pct;
+    }
+    var grad=parts.join(',');
+    var h='<div class="dash-donut" style="background:conic-gradient('+grad+')"><div class="dash-donut-center"><div class="total-count">'+total+'</div><div class="total-label">总客户</div></div></div>';
+    h+='<div class="dash-legend">';
+    for(var k in dist){
+        var c=colors[k]||'#adb5bd';
+        h+='<div class="dash-legend-item"><span class="dash-legend-dot" style="background:'+c+'"></span>'+k+': <b>'+dist[k]+'</b></div>';
+    }
+    h+='</div>';
+    el.innerHTML=h;
+}
+function renderDashAlerts(d){
+    var el=$('dash_alerts');if(!el)return;
+    var h='';
+    var largeCls=d.anomaly_large_count>0?'bg-danger-subtle':'bg-success-subtle';
+    var largeIcon=d.anomaly_large_count>0?'triangle-exclamation text-danger':'circle-check text-success';
+    h+='<div class="col-md-6"><div class="dash-alert-card '+largeCls+'">';
+    h+='<div class="dash-alert-icon" style="background:rgba(255,255,255,0.7)"><i class="fa-solid fa-'+largeIcon+'"></i></div>';
+    h+='<div><div class="fw-semibold small">大额交易预警 (&gt;5万)</div><div class="fw-bold h5 mb-0">'+(d.anomaly_large_count||0)+' 笔</div></div>';
+    h+='</div></div>';
+    var freqCls=d.anomaly_freq_count>0?'bg-warning-subtle':'bg-success-subtle';
+    var freqIcon=d.anomaly_freq_count>0?'clock text-warning':'circle-check text-success';
+    h+='<div class="col-md-6"><div class="dash-alert-card '+freqCls+'">';
+    h+='<div class="dash-alert-icon" style="background:rgba(255,255,255,0.7)"><i class="fa-solid fa-'+freqIcon+'"></i></div>';
+    h+='<div><div class="fw-semibold small">高频交易预警 (&gt;'+5+'笔/时)</div><div class="fw-bold h5 mb-0">'+(d.anomaly_freq_count||0)+' 个</div></div>';
+    h+='</div></div>';
+    el.innerHTML=h;
 }
 </script>
 </body>
