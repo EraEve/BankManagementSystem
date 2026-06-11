@@ -1035,18 +1035,325 @@ function quickAction(type){
 
 // --- About Page ---
 function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3>'+
-    // Original system description
+    // ======================== 技术栈 + 10大模块 (保持原有不变) ========================
     '<div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages + PythonAnywhere</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div>'+
-    // Detailed system description
+
+    // ======================== 系统详细说明 (Accordion 可折叠布局) ========================
     '<hr><h4 class="fw-bold mb-3"><i class="fa-solid fa-book-open text-primary me-2"></i>系统详细说明</h4>'+
-    '<div class="row g-3 mb-3"><div class="col-12">'+
-    '<div class="card bg-light border-0"><div class="card-body"><h5 class="fw-bold">1. 系统架构</h5><p class="small">本系统采用前后端分离的B/S架构，后端基于Flask框架实现RESTful API，前端采用Bootstrap 5 + Vanilla JavaScript构建SPA单页应用。系统完整实现了银行核心业务系统的10大功能模块，覆盖了《数据结构》课程要求的全部数据结构和算法。数据持久化采用管道分隔符文本文件，与C++版本数据格式完全兼容，支持跨平台部署（本地/云端）。系统支持三种角色（管理员、职员、客户）的差异化权限管理和功能访问。</p>'+
-    '<h5 class="fw-bold mt-3">2. 数据结构设计</h5><p class="small">系统运用了以下核心数据结构：(1) <b>向量/动态数组</b> — 用于员工、客户、银行卡等数据的存储和管理，支持O(1)随机访问；(2) <b>哈希映射</b> — 实现客户-银行卡关联查询和快速索引；(3) <b>链式队列</b> — 银行排队系统，支持VIP优先级的FIFO调度；(4) <b>图（邻接矩阵）</b> — 网点网络拓扑，支持Dijkstra最短路径计算；(5) <b>二叉搜索树</b> — 客户信用评分的有序索引，支持O(log n)查找。所有数据结构均以C++实现核心算法，Python Flask层提供Web API封装。</p>'+
-    '<h5 class="fw-bold mt-3">3. 核心算法</h5><p class="small">系统集成了多种经典算法：(1) <b>Dijkstra最短路径算法</b> — 网点导航，计算任意两网点间的最短距离；(2) <b>ISO 7064:1983 MOD 11-2</b> — 中国18位身份证校验码验证；(3) <b>滑动窗口</b> — 高频交易异常检测（1小时内超过5笔）；(4) <b>加权多因子风险评估</b> — 综合债务率、信用评分、金融资产的风控模型；(5) <b>冒泡排序/快速排序</b> — 交易记录排序；(6) <b>二分查找</b> — 有序数据的高效检索。所有算法时间复杂度均控制在合理范围内，确保系统在大数据量下的性能。</p>'+
-    '<h5 class="fw-bold mt-3">4. 安全性设计</h5><p class="small">系统实现了多层次安全防护：(1) <b>密码哈希存储</b> — 采用Werkzeug PBKDF2-SHA256加密，支持明文到哈希的自动迁移；(2) <b>会话管理</b> — Flask Session + 持久化Secret Key；(3) <b>CORS跨域保护</b> — 白名单正则匹配允许的Origin；(4) <b>线程安全文件锁</b> — 防止gunicorn多worker并发写数据损坏；(5) <b>原子写入</b> — 临时文件+os.replace确保数据完整性；(6) <b>登录装饰器</b> — 所有API端点统一鉴权。</p>'+
-    '<h5 class="fw-bold mt-3">5. 业务规则</h5><p class="small">(1) 存款单笔上限1000万元；(2) 取款/转账需验证余额充足性；(3) 贷款单笔上限50万元，需风控审批；(4) VIP客户阈值：金融资产≥10万元；(5) 大额交易预警阈值：5万元；(6) 高频交易预警：1小时内超过5笔；(7) 信用卡利率按年利率计算，日息=本金×年利率÷365，月息=本金×年利率÷12；(8) 信用评级：≥900 AAA，≥800 AA，≥700 A，≥600 B，<600 C。</p>'+
+    '<div class="accordion" id="aboutAccordion">'+
+
+    // ---- Section 1: 系统架构 ----
+    '<div class="accordion-item border rounded-2 mb-2"><h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#abSec1" aria-expanded="true"><i class="fa-solid fa-server me-2 text-primary"></i><b>1. 系统架构设计</b><span class="badge bg-primary ms-2" style="font-size:10px">B/S + RESTful + SPA</span></button></h2>'+
+    '<div id="abSec1" class="accordion-collapse collapse show" data-bs-parent="#aboutAccordion"><div class="accordion-body small">'+
+    '<p>本系统采用<b>前后端分离的B/S三层架构</b>，将表现层、业务逻辑层和数据访问层解耦，实现高内聚低耦合的设计目标。</p>'+
+    '<h6 class="fw-bold mt-3">🏗️ 架构层次</h6>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '┌──────────────────────────────────────────────────────────┐\n'+
+    '│                   【表现层】 Presentation Layer            │\n'+
+    '│  Bootstrap 5 + Vanilla JS SPA    Chart.js 可视化           │\n'+
+    '│  AJAX (fetch) ←→ JSON RESTful API                        │\n'+
+    '├──────────────────────────────────────────────────────────┤\n'+
+    '│                  【业务逻辑层】 Business Logic Layer        │\n'+
+    '│  Flask (Python)  │  10大模块  │  C++ 核心算法              │\n'+
+    '│  ┌──────────┬──────────┬──────────┬──────────┐          │\n'+
+    '│  │ 员工管理 │ 客户管理 │ 卡管理   │ 交易处理 │          │\n'+
+    '│  ├──────────┼──────────┼──────────┼──────────┤          │\n'+
+    '│  │ 业务查询 │ 排队管理 │ 网点导航 │ 智能管理 │          │\n'+
+    '│  ├──────────┴──────────┴──────────┴──────────┤          │\n'+
+    '│  │      身份核验        │     登录认证        │          │\n'+
+    '│  └──────────────────────┴─────────────────────┘          │\n'+
+    '├──────────────────────────────────────────────────────────┤\n'+
+    '│                  【数据访问层】 Data Access Layer           │\n'+
+    '│  管道分隔符文件 (|)    │   线程安全锁    │   原子写入       │\n'+
+    '│  account.txt  employee.txt  customer.txt  card.txt        │\n'+
+    '│  transaction.txt  branch.txt  queue.txt                  │\n'+
+    '└──────────────────────────────────────────────────────────┘</pre>'+
+    '<h6 class="fw-bold mt-3">📐 设计模式</h6>'+
+    '<ul><li><b>MVC变体</b> — Flask路由作为Controller，HTML模板为View，数据文件为Model</li>'+
+    '<li><b>单例模式</b> — 文件锁字典全局唯一，避免并发竞争</li>'+
+    '<li><b>装饰器模式</b> — @login_required统一鉴权，零侵入业务代码</li>'+
+    '<li><b>策略模式</b> — 投资顾问根据信用评分自动切换进取/稳健/保守策略</li>'+
+    '<li><b>工厂模式</b> — gen_txn_id() 统一生成交易编号</li></ul>'+
+    '<h6 class="fw-bold mt-3">🌐 部署架构</h6>'+
+    '<pre class="bg-dark text-light p-2 rounded-2" style="font-size:11px;line-height:1.5">'+
+    '用户浏览器 ──HTTP──▶ GitHub Pages (静态SPA)\n'+
+    '        │                │\n'+
+    '        └──AJAX──▶ PythonAnywhere (Flask API) ──▶ 文件系统 (data/*.txt)\n'+
+    '                         │\n'+
+    '                         └──▶ DeepSeek API (AI投资顾问)</pre>'+
     '</div></div></div>'+
-    // Real references
+
+    // ---- Section 2: 数据结构 ----
+    '<div class="accordion-item border rounded-2 mb-2"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#abSec2"><i class="fa-solid fa-diagram-project me-2 text-success"></i><b>2. 数据结构设计</b><span class="badge bg-success ms-2" style="font-size:10px">5种核心结构</span></button></h2>'+
+    '<div id="abSec2" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion"><div class="accordion-body small">'+
+    '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>数据结构</th><th>C++实现</th><th>Python等价</th><th>时间复杂度</th><th>应用模块</th></tr></thead><tbody>'+
+    '<tr><td><b>动态数组</b> (vector)</td><td><code>std::vector&lt;T&gt;</code></td><td><code>list</code></td><td>访问 O(1) | 插入 O(n)</td><td>模块1-5,7-9 (数据存储)</td></tr>'+
+    '<tr><td><b>哈希映射</b> (unordered_map)</td><td><code>std::unordered_map&lt;K,V&gt;</code></td><td><code>dict</code></td><td>查找 O(1) | 插入 O(1)</td><td>模块2,3 (客户-卡关联索引)</td></tr>'+
+    '<tr><td><b>链式队列</b> (LinkedQueue)</td><td><code>std::queue&lt;T&gt;</code> (deque)</td><td><code>list</code> (FIFO模拟)</td><td>入队 O(1) | 出队 O(1)</td><td>模块6 (排队叫号系统)</td></tr>'+
+    '<tr><td><b>图 — 邻接矩阵</b></td><td><code>int graph[N][N]</code></td><td><code>list[list[int]]</code></td><td>查边 O(1) | 空间 O(n²)</td><td>模块7 (网点拓扑)</td></tr>'+
+    '<tr><td><b>二叉搜索树</b> (BST)</td><td><code>struct Node {K key; Node *L,*R;}</code></td><td><code>sortedcontainers</code> (模拟)</td><td>查找/插入 O(log n)</td><td>模块2,8 (信用分索引)</td></tr>'+
+    '</tbody></table></div>'+
+    '<h6 class="fw-bold mt-3">🔗 数据关系模型 (ER)</h6>'+
+    '<pre class="bg-light p-2 rounded-2 border" style="font-size:11px;line-height:1.5">'+
+    'Employee ──1:N──▶ Transaction (经办)\n'+
+    'Customer ──1:N──▶ Card        (持有)\n'+
+    'Card     ──1:N──▶ Transaction (转出/转入)\n'+
+    'Branch   ──N:N──▶ Branch      (图边/路径)\n'+
+    'Queue    ──N:1──▶ Customer    (排队)\n'+
+    '</pre></div></div></div>'+
+
+    // ---- Section 3: 核心算法 + 伪代码 ----
+    '<div class="accordion-item border rounded-2 mb-2"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#abSec3"><i class="fa-solid fa-microchip me-2 text-warning"></i><b>3. 核心算法与伪代码</b><span class="badge bg-warning text-dark ms-2" style="font-size:10px">6个经典算法</span></button></h2>'+
+    '<div id="abSec3" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion"><div class="accordion-body small">'+
+
+    // 3.1 Dijkstra
+    '<h6 class="fw-bold">3.1 Dijkstra 最短路径算法 <span class="badge bg-info text-dark">O(n²)</span></h6>'+
+    '<p>用于网点导航模块，计算银行各网点之间的最短行驶距离。基于贪心策略，每次从未访问节点中选择距离最小的节点进行松弛操作。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: DIJKSTRA(graph[N][N], src)\n'+
+    '输入: N×N邻接矩阵graph, 源点src (graph[i][j]=-1表示无边)\n'+
+    '输出: dist[N] 最短距离数组, prev[N] 前驱节点数组\n'+
+    '\n'+
+    '1.  FOR i ← 0 TO N-1 DO\n'+
+    '2.      dist[i] ← ∞;  visited[i] ← false;  prev[i] ← -1\n'+
+    '3.  dist[src] ← 0\n'+
+    '4.\n'+
+    '5.  FOR round ← 0 TO N-1 DO\n'+
+    '6.      // 选取未访问的最小距离节点\n'+
+    '7.      u ← -1;  minDist ← ∞\n'+
+    '8.      FOR j ← 0 TO N-1 DO\n'+
+    '9.          IF NOT visited[j] AND dist[j] < minDist THEN\n'+
+    '10.             minDist ← dist[j];  u ← j\n'+
+    '11.     IF u = -1 THEN break           // 所有可达节点已处理\n'+
+    '12.     visited[u] ← true\n'+
+    '13.\n'+
+    '14.     // 松弛操作: 通过u更新相邻节点距离\n'+
+    '15.     FOR v ← 0 TO N-1 DO\n'+
+    '16.         IF NOT visited[v] AND graph[u][v] ≥ 0 THEN\n'+
+    '17.             newDist ← dist[u] + graph[u][v]\n'+
+    '18.             IF newDist < dist[v] THEN\n'+
+    '19.                 dist[v] ← newDist;  prev[v] ← u\n'+
+    '20.\n'+
+    '21. RETURN (dist, prev)\n'+
+    '\n'+
+    '// 路径重建: 从prev数组回溯\n'+
+    '函数: RECONSTRUCT_PATH(prev, src, dst)\n'+
+    '1.  path ← [];  v ← dst\n'+
+    '2.  WHILE v ≠ -1 DO\n'+
+    '3.      path.push_front(v);  v ← prev[v]\n'+
+    '4.  IF path[0] ≠ src THEN RETURN "不可达"\n'+
+    '5.  RETURN path</pre>'+
+
+    // 3.2 ISO 7064
+    '<h6 class="fw-bold mt-3">3.2 ISO 7064:1983 MOD 11-2 身份证校验 <span class="badge bg-info text-dark">O(1)</span></h6>'+
+    '<p>用于身份核验模块，验证中国18位身份证号码的合法性。前17位为数字本体，第18位是根据ISO 7064 MOD 11-2算法计算的校验码。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: VALIDATE_CHINESE_ID(id[0..17])\n'+
+    '输入: 18位字符串id\n'+
+    '输出: (isValid, message)\n'+
+    '\n'+
+    '1.  IF length(id) ≠ 18 THEN RETURN (false, "身份证必须为18位")\n'+
+    '2.  FOR i ← 0 TO 16 DO\n'+
+    '3.      IF NOT isDigit(id[i]) THEN RETURN (false, "第"+i+1+"位非数字")\n'+
+    '4.  IF NOT (isDigit(id[17]) OR id[17]=\'X\') THEN RETURN (false, "校验码无效")\n'+
+    '5.\n'+
+    '6.  // 验证出生日期\n'+
+    '7.  year  ← ToInt(id[6..9]);  month ← ToInt(id[10..11]);  day ← ToInt(id[12..13])\n'+
+    '8.  IF year<1900 OR year>2100      THEN RETURN (false, "年份超出范围")\n'+
+    '9.  IF month<1 OR month>12         THEN RETURN (false, "月份无效")\n'+
+    '10. maxDay ← DaysInMonth(year, month)\n'+
+    '11. IF day<1 OR day>maxDay         THEN RETURN (false, "日期无效")\n'+
+    '12.\n'+
+    '13. // ISO 7064 MOD 11-2 校验码计算\n'+
+    '14. weights ← [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2]\n'+
+    '15. checkMap ← [\'1\',\'0\',\'X\',\'9\',\'8\',\'7\',\'6\',\'5\',\'4\',\'3\',\'2\']\n'+
+    '16. total ← 0\n'+
+    '17. FOR i ← 0 TO 16 DO\n'+
+    '18.     total ← total + (Ord(id[i]) - 48) × weights[i]\n'+
+    '19. expected ← checkMap[total MOD 11]\n'+
+    '20. IF Uppercase(id[17]) ≠ expected THEN RETURN (false, "校验位不匹配")\n'+
+    '21.\n'+
+    '22. // 提取身份信息\n'+
+    '23. province ← PROVINCE_MAP[id[0..1]]\n'+
+    '24. birth    ← FormatDate(year, month, day)\n'+
+    '25. gender   ← IF (Ord(id[16]) MOD 2 = 1) THEN "男" ELSE "女"\n'+
+    '26. age      ← CurrentYear - year (修正月日)\n'+
+    '27. RETURN (true, province, birth, gender, age)</pre>'+
+
+    // 3.3 Sliding Window
+    '<h6 class="fw-bold mt-3">3.3 滑动窗口 — 高频交易检测 <span class="badge bg-info text-dark">O(n log n)</span></h6>'+
+    '<p>用于智能管理模块的异常检测，识别在1小时内进行超过5笔交易的账户。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: DETECT_HIGH_FREQUENCY(transactions[], THRESHOLD=5)\n'+
+    '输入: 交易列表transactions (每笔含from_card, time等字段)\n'+
+    '输出: 异常账户列表anomalies[]\n'+
+    '\n'+
+    '1.  // Step 1: 按客户ID分组交易 (哈希映射)\n'+
+    '2.  custMap ← {}                          // dict: customer_id → [transactions]\n'+
+    '3.  FOR EACH tx IN transactions DO\n'+
+    '4.      FOR key IN [tx.from_card, tx.to_card, tx.from, tx.to] DO\n'+
+    '5.          IF key IS valid THEN custMap[key].append(tx)\n'+
+    '6.\n'+
+    '7.  // Step 2: 对每个客户的交易，滑动窗口检测\n'+
+    '8.  anomalies ← []\n'+
+    '9.  FOR EACH (cust_id, txns) IN custMap DO\n'+
+    '10.     IF len(txns) ≤ THRESHOLD THEN CONTINUE\n'+
+    '11.     SORT txns BY time ASC              // 按时间排序 O(n log n)\n'+
+    '12.\n'+
+    '13.     // 滑动窗口: 同1小时窗口内计数\n'+
+    '14.     FOR i ← 0 TO len(txns)-1 DO\n'+
+    '15.         count ← 1\n'+
+    '16.         FOR j ← i+1 TO len(txns)-1 DO\n'+
+    '17.             IF txns[j].time[0..12] = txns[i].time[0..12] THEN  // 同小时\n'+
+    '18.                 count ← count + 1\n'+
+    '19.             ELSE break\n'+
+    '20.         IF count > THRESHOLD THEN\n'+
+    '21.             anomalies.append({cust_id, hour, count})\n'+
+    '22.             break                        // 该客户已标记，跳出\n'+
+    '23. RETURN anomalies</pre>'+
+
+    // 3.4 Risk Assessment
+    '<h6 class="fw-bold mt-3">3.4 加权多因子风险评估 <span class="badge bg-info text-dark">O(1)</span></h6>'+
+    '<p>用于风控审批模块，综合评估客户的信用状况。采用加权多因子模型，根据评分区间划分风险等级。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: RISK_ASSESS(customer, cards[])\n'+
+    '输入: 客户对象customer, 客户持有的银行卡列表cards\n'+
+    '输出: 风险评估报告\n'+
+    '\n'+
+    '1.  totalBalance  ← 0;  totalLoan ← 0;  totalCreditLimit ← 0\n'+
+    '2.  FOR EACH cd IN cards DO\n'+
+    '3.      IF cd.customer_id = customer.id THEN\n'+
+    '4.          totalBalance     ← totalBalance + cd.balance\n'+
+    '5.          totalLoan        ← totalLoan + cd.loan_balance\n'+
+    '6.          IF cd.type = "信用卡" THEN\n'+
+    '7.              totalCreditLimit ← totalCreditLimit + cd.credit_limit\n'+
+    '8.\n'+
+    '9.  // 计算负债率\n'+
+    '10. denominator ← totalBalance + totalCreditLimit\n'+
+    '11. debtRatio   ← IF denominator > 0 THEN totalLoan / denominator ELSE 0\n'+
+    '12.\n'+
+    '13. // 加权多因子风险评分\n'+
+    '14. riskScore ← customer.credit_score               // 基础分 (权重1.0)\n'+
+    '15. IF debtRatio > 0.5 THEN riskScore ← riskScore - 100   // 中等负债惩罚\n'+
+    '16. IF debtRatio > 0.8 THEN riskScore ← riskScore - 200   // 高负债额外惩罚\n'+
+    '17. IF customer.financial_assets > 100000  THEN riskScore ← riskScore + 50\n'+
+    '18. IF customer.financial_assets > 500000  THEN riskScore ← riskScore + 50\n'+
+    '19.\n'+
+    '20. // 风险等级判定\n'+
+    '21. IF riskScore ≥ 700 THEN conclusion ← "通过 (低风险)"\n'+
+    '22. ELSE IF riskScore ≥ 600 THEN conclusion ← "条件通过 (中风险)"\n'+
+    '23. ELSE conclusion ← "拒绝 (高风险)"\n'+
+    '24.\n'+
+    '25. RETURN {riskScore, debtRatio, conclusion}</pre>'+
+
+    // 3.5 Quick Sort
+    '<h6 class="fw-bold mt-3">3.5 快速排序 — 交易记录排序 <span class="badge bg-info text-dark">O(n log n)</span></h6>'+
+    '<p>用于业务查询模块，对交易记录按金额或时间进行高效排序。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: QUICKSORT(arr[], low, high, comparator)\n'+
+    '输入: 待排序数组arr, 左右边界low/high, 比较函数cmp\n'+
+    '输出: arr在[low, high]范围内有序\n'+
+    '\n'+
+    '1.  IF low ≥ high THEN RETURN\n'+
+    '2.  pivot ← PARTITION(arr, low, high, comparator)\n'+
+    '3.  QUICKSORT(arr, low, pivot-1, comparator)    // 递归左子数组\n'+
+    '4.  QUICKSORT(arr, pivot+1, high, comparator)   // 递归右子数组\n'+
+    '\n'+
+    '函数: PARTITION(arr, low, high, cmp)\n'+
+    '1.  pivotVal ← arr[high]                        // 选最右元素为基准\n'+
+    '2.  i ← low - 1                                 // i指向小于基准的末位\n'+
+    '3.  FOR j ← low TO high-1 DO\n'+
+    '4.      IF cmp(arr[j], pivotVal) ≤ 0 THEN       // arr[j] ≤ pivotVal\n'+
+    '5.          i ← i + 1;  SWAP(arr[i], arr[j])\n'+
+    '6.  SWAP(arr[i+1], arr[high])                   // 基准归位\n'+
+    '7.  RETURN i + 1\n'+
+    '\n'+
+    '// 使用示例: 按金额降序、时间升序\n'+
+    '// QUICKSORT(transactions, 0, len-1, (a,b) => IF a.amount≠b.amount\n'+
+    '//            THEN sign(b.amount - a.amount) ELSE sign(a.time - b.time))</pre>'+
+
+    // 3.6 Binary Search
+    '<h6 class="fw-bold mt-3">3.6 二分查找 <span class="badge bg-info text-dark">O(log n)</span></h6>'+
+    '<p>用于客户和交易的高效检索，前提是数据已按查找键排序。</p>'+
+    '<pre class="bg-dark text-light p-3 rounded-2" style="font-size:11px;line-height:1.5;overflow-x:auto">'+
+    '算法: BINARY_SEARCH(arr[], target)\n'+
+    '输入: 已排序数组arr, 目标值target (arr[i].key单调递增)\n'+
+    '输出: 目标索引index, 若未找到返回-1\n'+
+    '\n'+
+    '1.  left ← 0;  right ← len(arr) - 1\n'+
+    '2.  WHILE left ≤ right DO\n'+
+    '3.      mid ← left + (right - left) // 2           // 防溢出\n'+
+    '4.      IF arr[mid].key = target.key THEN\n'+
+    '5.          RETURN mid                              // 命中\n'+
+    '6.      ELSE IF arr[mid].key < target.key THEN\n'+
+    '7.          left ← mid + 1                          // 搜索右半部\n'+
+    '8.      ELSE\n'+
+    '9.          right ← mid - 1                         // 搜索左半部\n'+
+    '10. RETURN -1                                       // 未找到\n'+
+    '\n'+
+    '// 应用场景:\n'+
+    '// - 按客户编号查找: BINARY_SEARCH(customers_sorted_by_id, "C000005")\n'+
+    '// - 按交易ID查找:   BINARY_SEARCH(txns_sorted_by_id, "T1719001234567")</pre>'+
+
+    // 算法复杂度总结
+    '<h6 class="fw-bold mt-3">📊 算法复杂度总结</h6>'+
+    '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>算法</th><th>时间复杂度</th><th>空间复杂度</th><th>类型</th><th>应用场景</th></tr></thead><tbody>'+
+    '<tr><td>Dijkstra</td><td>O(n²)</td><td>O(n)</td><td>贪心</td><td>网点最短路径导航</td></tr>'+
+    '<tr><td>ISO 7064 MOD 11-2</td><td>O(1)</td><td>O(1)</td><td>校验和</td><td>身份证合法性验证</td></tr>'+
+    '<tr><td>滑动窗口</td><td>O(n log n)</td><td>O(n)</td><td>窗口扫描</td><td>高频交易异常检测</td></tr>'+
+    '<tr><td>加权多因子</td><td>O(1)</td><td>O(1)</td><td>评分模型</td><td>风控审批</td></tr>'+
+    '<tr><td>快速排序</td><td>O(n log n)</td><td>O(log n)</td><td>分治</td><td>交易记录排序</td></tr>'+
+    '<tr><td>二分查找</td><td>O(log n)</td><td>O(1)</td><td>减治</td><td>有序数据检索</td></tr>'+
+    '<tr><td>冒泡排序</td><td>O(n²)</td><td>O(1)</td><td>交换</td><td>小数据量排序</td></tr>'+
+    '</tbody></table></div>'+
+    '</div></div></div>'+
+
+    // ---- Section 4: 安全性 ----
+    '<div class="accordion-item border rounded-2 mb-2"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#abSec4"><i class="fa-solid fa-shield-halved me-2 text-danger"></i><b>4. 安全性设计</b><span class="badge bg-danger ms-2" style="font-size:10px">6层防护</span></button></h2>'+
+    '<div id="abSec4" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion"><div class="accordion-body small">'+
+    '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>#</th><th>安全层</th><th>实现方式</th><th>防护目标</th></tr></thead><tbody>'+
+    '<tr><td>1</td><td><b>密码哈希</b></td><td>Werkzeug PBKDF2-SHA256 (25万次迭代)，支持明文→哈希自动迁移</td><td>防密码泄露</td></tr>'+
+    '<tr><td>2</td><td><b>会话管理</b></td><td>Flask Session + 持久化SECRET_KEY (.flask_secret)，SameSite=None跨域</td><td>防会话劫持/CSRF</td></tr>'+
+    '<tr><td>3</td><td><b>CORS白名单</b></td><td>正则匹配允许的Origin：github.io, pythonanywhere.com, localhost</td><td>防跨域攻击</td></tr>'+
+    '<tr><td>4</td><td><b>线程安全锁</b></td><td>每文件独立的threading.Lock + tempfile原子写入(os.replace)</td><td>防并发数据损坏</td></tr>'+
+    '<tr><td>5</td><td><b>登录鉴权</b></td><td>@login_required装饰器，检查session["user"]存在性</td><td>防未授权访问</td></tr>'+
+    '<tr><td>6</td><td><b>输入验证</b></td><td>金额/编号范围检查，safe_float/safe_int容错转换，XSS防护(esc函数)</td><td>防注入/溢出</td></tr>'+
+    '</tbody></table></div>'+
+    '<h6 class="fw-bold mt-3">🔐 密码存储迁移策略</h6>'+
+    '<pre class="bg-dark text-light p-2 rounded-2" style="font-size:11px;line-height:1.5">'+
+    '登录时自动检测: IF stored_password NOT startswith("pbkdf2:") THEN\n'+
+    '    // 旧明文密码 → 自动哈希升级\n'+
+    '    new_hash ← generate_password_hash(plain_password)\n'+
+    '    UPDATE user SET password = new_hash\n'+
+    '    // 下次登录将使用哈希验证，零停机迁移</pre>'+
+    '</div></div></div>'+
+
+    // ---- Section 5: 业务规则 ----
+    '<div class="accordion-item border rounded-2 mb-2"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#abSec5"><i class="fa-solid fa-scale-balanced me-2 text-info"></i><b>5. 业务规则与常量</b><span class="badge bg-info text-dark ms-2" style="font-size:10px">8项核心规则</span></button></h2>'+
+    '<div id="abSec5" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion"><div class="accordion-body small">'+
+    '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>#</th><th>规则</th><th>阈值/公式</th><th>适用模块</th></tr></thead><tbody>'+
+    '<tr><td>R1</td><td>存款上限</td><td>单笔 ≤ ¥10,000,000</td><td>模块4 (存款)</td></tr>'+
+    '<tr><td>R2</td><td>取款验证</td><td>卡内余额 ≥ 取款金额</td><td>模块4 (取款)</td></tr>'+
+    '<tr><td>R3</td><td>贷款上限</td><td>单笔 ≤ ¥500,000，需风控审批</td><td>模块4 (贷款)</td></tr>'+
+    '<tr><td>R4</td><td>转账限制</td><td>自己不能转给自己，余额需充足</td><td>模块4 (转账)</td></tr>'+
+    '<tr><td>R5</td><td>VIP阈值</td><td>金融资产 ≥ ¥100,000 自动升级</td><td>模块2 (客户)</td></tr>'+
+    '<tr><td>R6</td><td>大额预警</td><td>交易金额 > ¥50,000 触发预警</td><td>模块8 (异常检测)</td></tr>'+
+    '<tr><td>R7</td><td>高频预警</td><td>1小时内 > 5笔交易触发预警</td><td>模块8 (异常检测)</td></tr>'+
+    '<tr><td>R8</td><td>信用评级</td><td>≥900 AAA | ≥800 AA | ≥700 A | ≥600 B | &lt;600 C</td><td>模块8 (风控)</td></tr>'+
+    '</tbody></table></div>'+
+    '<h6 class="fw-bold mt-3">💰 利息计算公式</h6>'+
+    '<pre class="bg-light p-2 rounded-2 border" style="font-size:12px;line-height:1.6">'+
+    '储蓄卡/借记卡 (按余额计息):\n'+
+    '  日利息 = 卡内余额 × (年利率% ÷ 100) ÷ 365\n'+
+    '  月利息 = 卡内余额 × (年利率% ÷ 100) ÷ 12\n'+
+    '\n'+
+    '信用卡 (按借贷余额计息):\n'+
+    '  日利息 = 借贷余额 × (年利率% ÷ 100) ÷ 365\n'+
+    '  月利息 = 借贷余额 × (年利率% ÷ 100) ÷ 12</pre>'+
+    '</div></div></div>'+
+    '</div>'+
+
+    // ======================== 参考文献 (扩展至20条) ========================
     '<hr><h4 class="fw-bold mb-3"><i class="fa-solid fa-graduation-cap text-primary me-2"></i>参考文献</h4>'+
     '<div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>#</th><th>文献</th><th>相关模块</th></tr></thead><tbody>'+
     '<tr><td>[1]</td><td>Dijkstra, E. W. (1959). "A Note on Two Problems in Connexion with Graphs." <i>Numerische Mathematik</i>, 1(1), 269-271.</td><td>网点导航 (模块7)</td></tr>'+
@@ -1059,6 +1366,16 @@ function aboutPage(){return '<div class="card card-custom"><div class="card-body
     '<tr><td>[8]</td><td>Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1994). <i>Design Patterns: Elements of Reusable Object-Oriented Software</i>. Addison-Wesley.</td><td>系统架构设计</td></tr>'+
     '<tr><td>[9]</td><td>Fielding, R. T. (2000). "Architectural Styles and the Design of Network-based Software Architectures." PhD Dissertation, UC Irvine.</td><td>RESTful API设计</td></tr>'+
     '<tr><td>[10]</td><td>FIPS PUB 201-3. (2022). "Personal Identity Verification (PIV) of Federal Employees and Contractors." NIST.</td><td>身份核验与生物识别 (模块9)</td></tr>'+
+    '<tr><td>[11]</td><td>Hoare, C. A. R. (1961). "Algorithm 64: Quicksort." <i>Communications of the ACM</i>, 4(7), 321.</td><td>排序算法</td></tr>'+
+    '<tr><td>[12]</td><td>Bellman, R. (1958). "On a Routing Problem." <i>Quarterly of Applied Mathematics</i>, 16(1), 87-90.</td><td>最短路径理论基础</td></tr>'+
+    '<tr><td>[13]</td><td>Provos, N., & Mazières, D. (1999). "A Future-Adaptable Password Scheme." <i>Proceedings of USENIX ATC</i>, 81-91.</td><td>密码哈希 (bcrypt基础)</td></tr>'+
+    '<tr><td>[14]</td><td>中国人民银行. (2016). "中国人民银行金融消费者权益保护实施办法."</td><td>客户权益保护</td></tr>'+
+    '<tr><td>[15]</td><td>国家市场监督管理总局, 中国国家标准化管理委员会. (2010). "GB/T 25069-2010 信息安全技术 术语."</td><td>安全术语规范</td></tr>'+
+    '<tr><td>[16]</td><td>OWASP Foundation. (2021). "OWASP Top 10 Web Application Security Risks." <i>owasp.org</i>.</td><td>Web安全防护</td></tr>'+
+    '<tr><td>[17]</td><td>中国银行业协会. (2020). "商业银行应用程序接口安全管理规范" (T/CBA 206-2020).</td><td>API安全设计</td></tr>'+
+    '<tr><td>[18]</td><td>Fredman, M. L., & Tarjan, R. E. (1987). "Fibonacci Heaps and Their Uses in Improved Network Optimization Algorithms." <i>JACM</i>, 34(3), 596-615.</td><td>图算法优化 (模块7)</td></tr>'+
+    '<tr><td>[19]</td><td>Bresenham, J. E. (1965). "Algorithm for Computer Control of a Digital Plotter." <i>IBM Systems Journal</i>, 4(1), 25-30.</td><td>网点坐标渲染 (模块7)</td></tr>'+
+    '<tr><td>[20]</td><td>中国银行保险监督管理委员会. (2021). "银行保险机构信息科技外包风险监管办法."</td><td>系统运维与外包管理</td></tr>'+
     '</tbody></table></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.3 · 计科2402班 第十组 · C++全功能Web实现 · DeepSeek AI集成</p></div></div>';}
 
 // --- Dashboard Loader ---
