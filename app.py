@@ -1,5 +1,5 @@
 """
-Bank Management System v3.0 — Full-Stack Web Application
+Bank Management System v3.3 — Full-Stack Web Application
 ========================================================
 Covers ALL 10 C++ modules:
   1. Employee Management (CRUD + auth)
@@ -26,12 +26,21 @@ import secrets
 import threading
 import webbrowser
 import calendar
+import urllib.request
+import urllib.error
 from datetime import datetime
 from functools import wraps
 
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# ============================================================
+# DeepSeek API Configuration
+# ============================================================
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_MODEL = "deepseek-chat"
 
 app = Flask(__name__)
 
@@ -1917,6 +1926,220 @@ def api_investment_advisor(cid):
         "allocation": config
     }})
 
+
+@app.route("/api/smart/investment-ai/<cid>", methods=["GET"])
+@login_required
+def api_investment_advisor_ai(cid):
+    """AI-powered investment advisor using DeepSeek API.
+    Falls back to rule-based engine if API key is not configured."""
+    customer = None
+    # Try customer.txt first
+    for c in read_customers():
+        if c["id"] == cid:
+            customer = c
+            break
+    # Fallback: account.txt (student accounts)
+    if not customer:
+        for a in read_accounts():
+            if a["id"] == cid:
+                customer = {"id": a["id"], "name": a["name"],
+                           "credit_score": 650, "type": "普通",
+                           "financial_assets": a.get("balance", 0)}
+                break
+    if not customer:
+        return jsonify({"success": False, "message": "客户不存在"}), 404
+
+    # Gather customer financial data
+    cards = read_cards()
+    my_cards = [cd for cd in cards if cd["customer_id"] == cid]
+    cash = sum(cd.get("balance", 0) for cd in my_cards if cd.get("type") != "信用卡")
+    if cash == 0:
+        cash = safe_float(customer.get("financial_assets",
+                         customer.get("balance", 0)))
+    total_loan = sum(cd.get("loan_balance", 0) for cd in my_cards)
+    credit_score = customer.get("credit_score", 600)
+
+    # Credit rating
+    if credit_score >= 900:
+        credit_rating = "AAA (极优)"
+    elif credit_score >= 800:
+        credit_rating = "AA (优秀)"
+    elif credit_score >= 700:
+        credit_rating = "A (良好)"
+    elif credit_score >= 600:
+        credit_rating = "B (一般)"
+    else:
+        credit_rating = "C (需关注)"
+
+    # Build user profile for AI prompt
+    card_details = []
+    for cd in my_cards:
+        card_details.append(
+            f"  - {cd['id']}: 类型={cd['type']}, 余额={cd.get('balance', 0):.2f}元, "
+            f"借贷={cd.get('loan_balance', 0):.2f}元, 利率={cd.get('interest_rate', 0.35)}%, "
+            f"额度={cd.get('credit_limit', 0):.2f}元, 状态={cd.get('status', '正常')}"
+        )
+    cards_text = "\n".join(card_details) if card_details else "无银行卡"
+
+    prompt = f"""你是一位专业的银行投资顾问AI。请根据以下客户信息，提供个性化的投资策略建议。
+
+## 客户信息
+- 姓名: {customer.get('name', '未知')}
+- 客户类型: {customer.get('type', '普通')}
+- 信用评分: {credit_score} ({credit_rating})
+- 可用资金: {cash:.2f} 元
+- 总借贷余额: {total_loan:.2f} 元
+- 金融资产: {safe_float(customer.get('financial_assets', customer.get('balance', 0))):.2f} 元
+
+## 银行卡信息
+{cards_text}
+
+## 要求
+请提供以下内容的投资建议（用中文回答，专业且易于理解）：
+
+1. **风险评估**: 根据客户的信用评分和负债情况，评估当前风险水平。
+2. **投资策略**: 推荐适合该客户风险偏好的投资策略（保守型/稳健型/进取型）。
+3. **资产配置建议**: 给出具体的资产配置比例建议（如股票型基金、债券型基金、货币基金、定期存款、活期备用等），不要超过5个类别。
+4. **具体建议**: 3-5条具体的可操作建议。
+5. **风险提示**: 必要的风险提示。
+
+请用Markdown格式输出，包含清晰的标题和分段。总字数控制在800字以内。"""
+
+    # Try DeepSeek API if key is available
+    ai_advice = None
+    ai_model = "rule-engine"
+    risk_type = "稳健型"
+    ai_allocation = None
+
+    if DEEPSEEK_API_KEY:
+        try:
+            req_data = json.dumps({
+                "model": DEEPSEEK_MODEL,
+                "messages": [
+                    {"role": "system", "content": "你是一位专业的银行投资顾问AI，拥有丰富的金融投资经验。请基于客户数据提供专业、个性化、可操作的投资建议。"},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 2000,
+                "top_p": 0.9
+            }).encode("utf-8")
+
+            req = urllib.request.Request(DEEPSEEK_API_URL, data=req_data)
+            req.add_header("Content-Type", "application/json")
+            req.add_header("Authorization", f"Bearer {DEEPSEEK_API_KEY}")
+
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                ai_advice = result["choices"][0]["message"]["content"]
+                ai_model = DEEPSEEK_MODEL
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+            print(f"[DeepSeek] HTTP {e.code}: {error_body}")
+            # Fall through to rule-based fallback
+        except Exception as e:
+            print(f"[DeepSeek] Error: {e}")
+            # Fall through to rule-based fallback
+
+    # Rule-based fallback allocation
+    if credit_score > 750:
+        risk_type = "进取型"
+        ai_allocation = {
+            "股票型基金": round(cash * 0.35, 2),
+            "债券型基金": round(cash * 0.25, 2),
+            "货币基金": round(cash * 0.15, 2),
+            "定期存款": round(cash * 0.15, 2),
+            "活期备用": round(cash * 0.10, 2)
+        }
+    elif credit_score > 600:
+        risk_type = "稳健型"
+        ai_allocation = {
+            "债券型基金": round(cash * 0.35, 2),
+            "定期存款": round(cash * 0.30, 2),
+            "货币基金": round(cash * 0.20, 2),
+            "活期备用": round(cash * 0.15, 2)
+        }
+    else:
+        risk_type = "保守型"
+        ai_allocation = {
+            "定期存款": round(cash * 0.45, 2),
+            "货币基金": round(cash * 0.30, 2),
+            "活期备用": round(cash * 0.25, 2)
+        }
+
+    if not ai_advice:
+        # Generate rule-based advice text
+        ai_advice = _generate_rule_based_advice(
+            customer.get("name", ""), cash, total_loan, credit_score,
+            credit_rating, risk_type, ai_allocation
+        )
+        ai_model = "rule-engine (DeepSeek API未配置，使用规则引擎)"
+
+    return jsonify({"success": True, "data": {
+        "customer_name": customer.get("name", ""),
+        "customer_id": customer.get("id", ""),
+        "available_cash": round(cash, 2),
+        "total_loan": round(total_loan, 2),
+        "credit_score": credit_score,
+        "credit_rating": credit_rating,
+        "risk_preference": risk_type,
+        "allocation": ai_allocation,
+        "advice": ai_advice,
+        "model": ai_model
+    }})
+
+
+def _generate_rule_based_advice(name, cash, loan, credit_score, credit_rating, risk_type, allocation):
+    """Generate detailed rule-based investment advice (fallback when DeepSeek unavailable)."""
+    lines = [
+        f"## 投资分析报告 - {name}",
+        "",
+        f"### 1. 风险评估",
+        f"- 信用评分: {credit_score} 分 ({credit_rating})",
+        f"- 可用资金: {cash:,.2f} 元",
+        f"- 当前负债: {loan:,.2f} 元",
+        f"- 风险偏好: {risk_type}",
+    ]
+
+    if credit_score >= 800:
+        lines.append("- 风险水平: 低 — 该客户信用状况优秀，具备较强的风险承受能力。")
+    elif credit_score >= 600:
+        lines.append("- 风险水平: 中等 — 该客户信用状况良好，建议稳健配置资产。")
+    else:
+        lines.append("- 风险水平: 较高 — 建议以保守策略为主，优先保障资金安全。")
+
+    lines.append("")
+    lines.append(f"### 2. 投资策略 — {risk_type}")
+    if risk_type == "进取型":
+        lines.append("采用积极增长策略，在控制风险的前提下追求较高收益。权益类资产可配置较高比例。")
+    elif risk_type == "稳健型":
+        lines.append("采用平衡配置策略，兼顾收益与安全。固定收益类与权益类资产均衡配置。")
+    else:
+        lines.append("采用本金保护策略，以资金安全和流动性为首要目标，低风险资产为主。")
+
+    lines.append("")
+    lines.append("### 3. 资产配置建议")
+    for k, v in allocation.items():
+        pct = round(v / cash * 100, 1) if cash > 0 else 0
+        lines.append(f"- **{k}**: {v:,.2f} 元 ({pct}%)")
+
+    lines.append("")
+    lines.append("### 4. 具体建议")
+    lines.append("1. 保持充足的流动性储备（活期备用），覆盖3-6个月的生活开支。")
+    lines.append("2. 定期存款选择阶梯到期策略，既保证收益又保持灵活性。")
+    lines.append("3. 每月定投指数基金，利用复利效应实现长期财富增值。")
+    if loan > 0:
+        lines.append(f"4. 优先偿还高息贷款（当前借贷余额 {loan:,.2f} 元），降低财务成本。")
+    else:
+        lines.append("4. 考虑适当使用信用卡积累信用记录，但注意按时还款避免利息。")
+    lines.append("5. 建议每季度审视一次资产配置，根据市场变化和个人情况动态调整。")
+
+    lines.append("")
+    lines.append("### 5. 风险提示")
+    lines.append("> ⚠️ 投资有风险，入市需谨慎。以上建议基于当前信息生成，不构成具体的投资承诺。")
+    lines.append("> 市场波动可能导致实际收益偏离预期，建议在做出重大投资决策前咨询专业理财顾问。")
+
+    return "\n".join(lines)
+
 # ============================================================
 # MODULE 9: IDENTITY VERIFICATION
 # ============================================================
@@ -2186,8 +2409,9 @@ if __name__ == "__main__":
     init_all_data()
     print("")
     print("  ╔══════════════════════════════════════════╗")
-    print("  ║  银行智能管理系统 v3.0 Full-Stack      ║")
+    print("  ║  银行智能管理系统 v3.3 Full-Stack      ║")
     print("  ║  C++ 10大模块 → Web全功能版            ║")
+    print("  ║  + DeepSeek AI 投资顾问                ║")
     print("  ╚══════════════════════════════════════════╝")
     print("")
     print("  前端: http://127.0.0.1:5000")

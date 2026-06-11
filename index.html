@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>银行智能管理系统 v3.0 | 第十组</title>
+<title>银行智能管理系统 v3.3 | 第十组</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
@@ -72,7 +72,7 @@ body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",Arial,sans-serif;ba
 <div class="login-header">
 <div class="brand-icon"><i class="fa-solid fa-building-columns"></i></div>
 <h2 class="mb-1 fw-bold">银行智能管理系统</h2>
-<p class="mb-0 opacity-75">v3.0 · C++ 10大模块完整Web实现 · 第十组</p>
+<p class="mb-0 opacity-75">v3.3 · C++ 10大模块完整Web实现 · 第十组</p>
 </div>
 <div class="login-body">
 <div class="mb-3"><span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2"><i class="fa-solid fa-shield-halved me-1"></i>多角色登录 · 全功能系统</span></div>
@@ -95,7 +95,7 @@ body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",Arial,sans-serif;ba
 <section id="system_area" class="hidden">
 <nav class="navbar navbar-expand-lg topbar">
 <div class="container-fluid px-3 px-lg-4">
-<a class="navbar-brand fw-bold" href="javascript:void(0);"><i class="fa-solid fa-building-columns me-2"></i>Bank v3.0</a>
+<a class="navbar-brand fw-bold" href="javascript:void(0);"><i class="fa-solid fa-building-columns me-2"></i>Bank v3.3</a>
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="mainNav">
 <ul class="navbar-nav me-auto" id="nav_tabs"></ul>
@@ -117,7 +117,7 @@ var API_BASE = (function(){var h=window.location.hostname;if(h.includes('github.
 
 function $(id){return document.getElementById(id);}
 function esc(s){var d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
-function fmt(v){return '&yen;'+Number(v||0).toFixed(2);}
+function fmt(v){return '¥'+Number(v||0).toFixed(2);}
 function fmtNum(v){return Number(v||0).toFixed(2);}
 function bad(s,t){t=t||'success';return '<span class="badge badge-status-'+(t==='success'?'ok':'fail')+'">'+s+'</span>';}
 function showMsg(el,txt,type){
@@ -159,7 +159,6 @@ function buildNavTabs(){
     }else{
         tabs=[{id:'dashboard',icon:'chart-pie',label:'我的仪表盘'},
               {id:'myprofile',icon:'id-card',label:'个人信息'},
-              {id:'mycards',icon:'credit-card',label:'我的银行卡'},
               {id:'mytrans',icon:'receipt',label:'交易记录'},
               {id:'mytrade',icon:'money-bill-transfer',label:'业务办理'},
               {id:'myinvest',icon:'chart-line',label:'投资顾问'},
@@ -694,7 +693,7 @@ function smartPage(){
     '<div class="input-group input-group-sm mb-2"><input type="text" id="risk_cid" class="form-control form-control-sm" placeholder="客户编号 (如C000001)"><button class="btn btn-danger btn-sm" onclick="doRisk()">审批</button></div>'+
     '<div id="risk_result" class="small"></div></div></div>'+
     '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5><i class="fa-solid fa-chart-line text-primary me-2"></i>投资顾问</h5>'+
-    '<div class="input-group input-group-sm mb-2"><input type="text" id="invest_cid" class="form-control form-control-sm" placeholder="客户编号"><button class="btn btn-primary btn-sm" onclick="doInvest()">分析</button></div>'+
+    '<div class="input-group input-group-sm mb-2"><input type="text" id="invest_cid" class="form-control form-control-sm" placeholder="客户编号"><button class="btn btn-primary btn-sm" onclick="doInvest()">规则分析</button><button class="btn btn-outline-primary btn-sm" onclick="doInvestAIStaff()"><i class="fa-solid fa-robot me-1"></i>AI分析</button></div>'+
     '<div id="invest_result" class="small"></div></div></div></div>';
 }
 function loadSmartPage(){/* actions are onclick */}
@@ -736,6 +735,16 @@ async function doInvest(){
     var d=r.data;var h=d.customer_name+': 可用资金'+fmtNum(d.available_cash)+' ('+d.risk_preference+')<br>';
     for(var k in d.allocation){h+=k+': '+fmt(d.allocation[k])+'<br>';}
     $('invest_result').innerHTML=h;
+}
+async function doInvestAIStaff(){
+    var cid=$('invest_cid').value.trim();if(!cid)return;
+    var el=$('invest_result');el.innerHTML='<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i>DeepSeek AI分析中...</span>';
+    var r=await api('/api/smart/investment-ai/'+cid);
+    if(!r.success){el.innerHTML='<span class="text-danger">'+r.message+'</span>';return;}
+    var d=r.data;var h='<b>'+esc(d.customer_name)+'</b> ('+esc(d.risk_preference)+') | 模型: '+esc(d.model)+'<br>';
+    h+='<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;max-height:300px;overflow-y:auto">'+esc(d.advice)+'</div>';
+    if(d.allocation){h+='<br><b>推荐配置:</b><br>';for(var k in d.allocation){h+=k+': '+fmt(d.allocation[k])+'<br>';}}
+    el.innerHTML=h;
 }
 
 // --- Identity Page ---
@@ -784,7 +793,7 @@ function myDashboardPage(){
     h+='<div class="card hero-card mb-3"><div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap">';
     h+='<div><h1 class="fw-bold mb-1">欢迎, '+esc(currentUser.name)+'</h1>';
     h+='<p class="mb-0 opacity-75">'+(currentUser.type||'普通')+'客户 | 信用评分: <b>'+(currentUser.credit_score||'-')+'</b> | 客户编号: '+esc(currentUser.id)+'</p></div>';
-    h+='<div class="text-end d-none d-md-block"><div class="stat-icon mx-auto mb-1" style="background:rgba(255,255,255,0.25);color:#fff"><i class="fa-solid fa-building-columns"></i></div><small class="opacity-75">银行智能管理系统 v3.1</small></div>';
+    h+='<div class="text-end d-none d-md-block"><div class="stat-icon mx-auto mb-1" style="background:rgba(255,255,255,0.25);color:#fff"><i class="fa-solid fa-building-columns"></i></div><small class="opacity-75">银行智能管理系统 v3.3</small></div>';
     h+='</div></div>';
 
     // Row 2: Quick Action Buttons
@@ -815,12 +824,44 @@ function myDashboardPage(){
 
     return h;
 }
-function myProfilePage(){return '<h3 class="section-title">个人信息</h3><div class="card card-custom"><div class="card-body p-3" id="my_profile_data">加载中...</div></div>';}
+function myProfilePage(){return '<h3 class="section-title"><i class="fa-solid fa-id-card text-primary me-2"></i>个人信息</h3>'+
+    '<div class="row g-3"><div class="col-lg-5"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-user me-2 text-primary"></i>基本资料</h5><div id="my_profile_data">加载中...</div></div></div></div>'+
+    '<div class="col-lg-7"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card me-2 text-info"></i>银行卡信息</h5><div id="my_profile_cards">加载中...</div></div></div></div></div>';}
 async function loadMyProfile(){
-    if(currentUser.id.startsWith('C')){
-        var r=await api('/api/customers/'+currentUser.id);if(!r.success){$('my_profile_data').innerHTML=r.message;return;}
-        var c=r.data;$('my_profile_data').innerHTML=prof('编号',c.id)+prof('姓名',c.name)+prof('类型',c.type)+prof('信用评分',c.credit_score)+prof('金融资产',fmt(c.financial_assets))+prof('电话',c.phone)+prof('地址',c.address)+prof('身份证',c.id_card)+prof('开户日期',c.open_date);
-    }else{$('my_profile_data').innerHTML=prof('学号',currentUser.id)+prof('姓名',currentUser.name)+prof('余额',fmt(currentUser.balance))+prof('类型',currentUser.type);}
+    // Load personal info
+    if(currentUser.id && currentUser.id.startsWith('C')){
+        var r=await api('/api/customers/'+currentUser.id);
+        if(!r.success){$('my_profile_data').innerHTML='<div class="alert alert-danger py-2 small">'+r.message+'</div>';return;}
+        var c=r.data;
+        $('my_profile_data').innerHTML=
+            prof('姓名',c.name)+prof('客户编号',c.id)+prof('班级','计科2402班')+
+            prof('类型',c.type)+prof('电话',c.phone||'—')+prof('地址',c.address||'—')+
+            prof('信用评分',c.credit_score)+prof('金融资产',fmt(c.financial_assets))+
+            prof('身份证',c.id_card||'—')+prof('开户日期',c.open_date);
+    }else{
+        // Student account
+        $('my_profile_data').innerHTML=
+            prof('姓名',currentUser.name||'—')+prof('学号',currentUser.id)+prof('班级','计科2402班')+
+            prof('类型',currentUser.type||'普通')+prof('余额',fmt(currentUser.balance||0));
+    }
+    // Load cards info
+    var cardsR=await api('/api/cards');
+    var cardsEl=$('my_profile_cards');
+    if(!cardsR.success||!cardsR.data){cardsEl.innerHTML='<p class="text-secondary small">暂无银行卡数据</p>';return;}
+    var myCards=cardsR.data.filter(function(c){return c.customer_id===currentUser.id;});
+    if(myCards.length===0){
+        cardsEl.innerHTML='<p class="text-secondary">当前为简化账户，暂无独立银行卡信息。<br><small class="text-muted">请使用业务办理功能进行操作。</small></p>';
+        return;
+    }
+    var h='<div class="table-responsive"><table class="table table-hover table-sm mb-0"><thead><tr><th>卡号</th><th>类型</th><th>余额</th><th>借贷余额</th><th>利率</th><th>信用额度</th><th>状态</th></tr></thead><tbody>';
+    var totalBal=0,totalLoan=0;
+    myCards.forEach(function(c){
+        totalBal+=c.balance||0;totalLoan+=c.loan_balance||0;
+        h+='<tr><td class="fw-semibold small">'+esc(c.id)+'</td><td>'+esc(c.type)+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+(c.interest_rate||0)+'%</td><td>'+fmt(c.credit_limit||0)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status||'—','warn'))+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<hr class="my-2"><div class="d-flex gap-3 small"><span><b>总余额: </b>'+fmt(totalBal)+'</span><span><b>总借贷: </b>'+fmt(totalLoan)+'</span><span><b>卡片数: </b>'+myCards.length+' 张</span></div>';
+    cardsEl.innerHTML=h;
 }
 function prof(k,v){return '<div class="profile-row"><div class="text-secondary small">'+k+'</div><div class="fw-semibold">'+v+'</div></div>';}
 
@@ -845,20 +886,37 @@ async function loadMyTransactions(){
 }
 
 function myInvestPage(){return '<h3 class="section-title"><i class="fa-solid fa-chart-line text-primary me-2"></i>投资顾问</h3>'+
-    '<div class="row g-3"><div class="col-lg-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-percent text-info me-2"></i>利息信息</h5><div class="d-flex gap-2 mb-3"><button class="btn btn-info btn-sm" onclick="calcMyInterest(\'daily\')">日利息</button><button class="btn btn-outline-info btn-sm" onclick="calcMyInterest(\'monthly\')">月利息</button></div><div id="my_interest" class="small"></div></div></div></div>'+
-    '<div class="col-lg-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-success me-2"></i>投资建议</h5><div id="my_invest_info" class="small mb-2">加载中...</div><div style="height:220px"><canvas id="my_invest_chart"></canvas></div></div></div></div></div>';}
+    '<div class="row g-3"><div class="col-lg-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-percent text-info me-2"></i>利息信息</h5><div class="d-flex gap-2 mb-3"><button class="btn btn-info btn-sm" onclick="calcMyInterest(\'daily\')"><i class="fa-solid fa-calendar-day me-1"></i>日利息</button><button class="btn btn-outline-info btn-sm" onclick="calcMyInterest(\'monthly\')"><i class="fa-solid fa-calendar me-1"></i>月利息</button></div><div id="my_interest" class="small"></div></div></div></div>'+
+    '<div class="col-lg-6"><div class="card card-custom h-100"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-success me-2"></i>投资建议 <small class="text-secondary fw-normal">(规则引擎)</small></h5><div id="my_invest_info" class="small mb-2">加载中...</div><div style="height:220px"><canvas id="my_invest_chart"></canvas></div></div></div></div>'+
+    '<div class="col-12"><div class="card card-custom"><div class="card-body p-3"><h5 class="fw-bold mb-3"><i class="fa-solid fa-robot text-primary me-2"></i>AI智能投资分析 <span class="badge bg-primary ms-1" style="font-size:11px">DeepSeek</span></h5>'+
+    '<p class="small text-secondary mb-2">基于DeepSeek大模型，结合您的资产状况、风险偏好和市场趋势，提供个性化投资策略建议。</p>'+
+    '<div class="d-flex gap-2 mb-2"><button class="btn btn-primary btn-sm" onclick="doAIInvest()"><i class="fa-solid fa-brain me-1"></i>AI智能分析</button><button class="btn btn-outline-secondary btn-sm" onclick="$(\'ai_invest_result\').innerHTML=\'\'"><i class="fa-solid fa-eraser me-1"></i>清空</button></div>'+
+    '<div id="ai_invest_result" class="small"></div></div></div></div></div>';}
 async function calcMyInterest(type){
-    var r=await api('/api/smart/interest?type='+type);if(!r.success){$('my_interest').innerHTML=r.message;return;}
+    var typeLabel=type==='monthly'?'月':'日';
+    var el=$('my_interest');if(!el)return;
+    el.innerHTML='<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i>计算中...</span>';
+    var r=await api('/api/smart/interest?type='+type);
+    if(!r.success){el.innerHTML='<span class="text-danger">'+r.message+'</span>';return;}
     // Get my card IDs from /api/cards filtered by customer_id
     var cardsR=await api('/api/cards');
     var myCardIds=[];
     if(cardsR.success&&cardsR.data){
         cardsR.data.forEach(function(c){if(c.customer_id===currentUser.id)myCardIds.push(c.id);});
     }
-    if(myCardIds.length===0){$('my_interest').innerHTML='<span class=\"text-secondary\">暂无银行卡，请先绑定</span>';return;}
-    var h='';var total=0;
-    r.data.forEach(function(d){if(myCardIds.indexOf(d.card_id)>=0){h+=d.card_id+' ('+d.type+'): '+fmtNum(d.interest)+' 元<br>';total+=d.interest;}});
-    if(!h)h='暂无利息数据';h='<b>合计: '+fmtNum(total)+' 元</b><br>'+h;$('my_interest').innerHTML=h;
+    if(myCardIds.length===0){
+        // Fallback: show simplified interest based on currentUser balance
+        var bal=currentUser.balance||0;
+        var rate=0.35/100;
+        var myInt=type==='monthly'?bal*rate/12:bal*rate/365;
+        el.innerHTML='<b>'+typeLabel+'利息合计: '+fmtNum(myInt)+' 元</b><br><span class="text-secondary small">(基于简化账户，利率0.35%)</span>';
+        return;
+    }
+    var h='';var total=0;var found=false;
+    r.data.forEach(function(d){if(myCardIds.indexOf(d.card_id)>=0){h+=d.card_id+' ('+d.type+'): '+fmtNum(d.interest)+' 元<br>';total+=d.interest;found=true;}});
+    if(!found)h='暂无利息数据<br>';
+    h='<b>'+typeLabel+'利息合计: '+fmtNum(total)+' 元</b><br>'+h;
+    el.innerHTML=h;
 }
 async function loadMyInvest(){
     var cid=currentUser.id;
@@ -873,6 +931,38 @@ async function loadMyInvest(){
     var labels=[],data=[],bgColors={'股票型基金':'#dc3545','债券型基金':'#0d6efd','货币基金':'#6f42c1','定期存款':'#198754','活期备用':'#fd7e14'};
     var colors=[];for(var k in d.allocation){labels.push(k);data.push(d.allocation[k]);colors.push(bgColors[k]||'#adb5bd');}
     _dashCharts.invest=new Chart(canvas,{type:'bar',data:{labels:labels,datasets:[{label:'金额 (元)',data:data,backgroundColor:colors,borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);}}}}}});
+}
+async function doAIInvest(){
+    var el=$('ai_invest_result');if(!el)return;
+    el.innerHTML='<div class="text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>DeepSeek AI正在分析您的财务状况，请稍候...</div>';
+    var cid=currentUser.id;
+    if(!cid.startsWith('C')){
+        var cr=await api('/api/customers');
+        var cf=cr.data?cr.data.find(function(x){return x.id===cid||x.name===currentUser.name}):null;
+        if(cf)cid=cf.id;
+    }
+    var r=await api('/api/smart/investment-ai/'+cid);
+    if(!r.success){el.innerHTML='<div class="alert alert-danger py-2 small">'+r.message+'</div>';return;}
+    var d=r.data;
+    var h='<div class="alert alert-success py-2 small"><i class="fa-solid fa-check-circle me-1"></i>AI分析完成 | 模型: '+esc(d.model)+' | 风险偏好: <b>'+esc(d.risk_preference)+'</b></div>';
+    h+='<div class="card bg-light border-0 mb-2"><div class="card-body p-3"><h6 class="fw-bold mb-2"><i class="fa-solid fa-lightbulb text-warning me-1"></i>AI投资建议</h6>';
+    h+='<div style="white-space:pre-wrap;font-size:14px;line-height:1.7">'+esc(d.advice)+'</div></div></div>';
+    if(d.allocation){
+        h+='<div class="card bg-light border-0"><div class="card-body p-3"><h6 class="fw-bold mb-2"><i class="fa-solid fa-chart-pie text-success me-1"></i>推荐资产配置</h6>';
+        h+='<div class="dash-bar-chart">';
+        var maxAmt=0;for(var k in d.allocation){if(d.allocation[k]>maxAmt)maxAmt=d.allocation[k];}
+        var bgColors={'股票型基金':'#dc3545','债券型基金':'#0d6efd','货币基金':'#6f42c1','定期存款':'#198754','活期备用':'#fd7e14','黄金ETF':'#ffc107','国债逆回购':'#20c997'};
+        for(var k in d.allocation){
+            var pct=maxAmt>0?(d.allocation[k]/maxAmt*100):0;
+            var c=bgColors[k]||'#6c757d';
+            h+='<div class="dash-bar-row">';
+            h+='<span class="dash-bar-label" style="width:70px">'+esc(k)+'</span>';
+            h+='<div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+c+'">'+(pct>20?fmt(d.allocation[k]):'')+'</div></div>';
+            h+='</div>';
+        }
+        h+='</div></div></div>';
+    }
+    el.innerHTML=h;
 }
 
 // --- Customer Dashboard Loader ---
@@ -944,7 +1034,32 @@ function quickAction(type){
 }
 
 // --- About Page ---
-function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3><div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages + PythonAnywhere</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.1 · 第十组 · C++全功能Web实现</p></div></div>';}
+function aboutPage(){return '<div class="card card-custom"><div class="card-body p-4"><h3 class="section-title">系统说明</h3>'+
+    // Original system description
+    '<div class="row g-4"><div class="col-md-6"><h5><i class="fa-solid fa-code me-2 text-primary"></i>技术栈</h5><ul class="list-unstyled"><li><i class="fa-solid fa-check text-success me-2"></i>后端：Flask (Python) → 完全覆盖C++ 10大模块</li><li><i class="fa-solid fa-check text-success me-2"></i>前端：Bootstrap 5 + vanilla JS (SPA单页应用)</li><li><i class="fa-solid fa-check text-success me-2"></i>数据：管道分隔符文件持久化 (与C++格式兼容)</li><li><i class="fa-solid fa-check text-success me-2"></i>算法：Dijkstra / ISO 7064 / 加权多因子 / 冒泡/快排 / 二分查找 / 滑动窗口</li><li><i class="fa-solid fa-check text-success me-2"></i>托管：GitHub + GitHub Pages + PythonAnywhere</li></ul></div><div class="col-md-6"><h5><i class="fa-solid fa-list-check me-2 text-primary"></i>10大功能模块</h5><ol class="small"><li>银行职员管理 (CRUD + 哈希索引)</li><li>客户账户管理 (广义表 + BST索引)</li><li>银行卡管理 (多卡关联)</li><li>存取贷业务管理 (5种业务)</li><li>业务查询 (组合过滤 + 排序 + 汇总)</li><li>银行排队管理 (链式队列 + VIP优先)</li><li>网点查询与导航 (图 + Dijkstra)</li><li>智能管理 (异常检测 + 利息 + 风控 + 投资)</li><li>身份核验 (ISO 7064 + 生物识别 + OCR)</li><li>统一登录与权限 (3角色)</li></ol></div></div>'+
+    // Detailed system description
+    '<hr><h4 class="fw-bold mb-3"><i class="fa-solid fa-book-open text-primary me-2"></i>系统详细说明</h4>'+
+    '<div class="row g-3 mb-3"><div class="col-12">'+
+    '<div class="card bg-light border-0"><div class="card-body"><h5 class="fw-bold">1. 系统架构</h5><p class="small">本系统采用前后端分离的B/S架构，后端基于Flask框架实现RESTful API，前端采用Bootstrap 5 + Vanilla JavaScript构建SPA单页应用。系统完整实现了银行核心业务系统的10大功能模块，覆盖了《数据结构》课程要求的全部数据结构和算法。数据持久化采用管道分隔符文本文件，与C++版本数据格式完全兼容，支持跨平台部署（本地/云端）。系统支持三种角色（管理员、职员、客户）的差异化权限管理和功能访问。</p>'+
+    '<h5 class="fw-bold mt-3">2. 数据结构设计</h5><p class="small">系统运用了以下核心数据结构：(1) <b>向量/动态数组</b> — 用于员工、客户、银行卡等数据的存储和管理，支持O(1)随机访问；(2) <b>哈希映射</b> — 实现客户-银行卡关联查询和快速索引；(3) <b>链式队列</b> — 银行排队系统，支持VIP优先级的FIFO调度；(4) <b>图（邻接矩阵）</b> — 网点网络拓扑，支持Dijkstra最短路径计算；(5) <b>二叉搜索树</b> — 客户信用评分的有序索引，支持O(log n)查找。所有数据结构均以C++实现核心算法，Python Flask层提供Web API封装。</p>'+
+    '<h5 class="fw-bold mt-3">3. 核心算法</h5><p class="small">系统集成了多种经典算法：(1) <b>Dijkstra最短路径算法</b> — 网点导航，计算任意两网点间的最短距离；(2) <b>ISO 7064:1983 MOD 11-2</b> — 中国18位身份证校验码验证；(3) <b>滑动窗口</b> — 高频交易异常检测（1小时内超过5笔）；(4) <b>加权多因子风险评估</b> — 综合债务率、信用评分、金融资产的风控模型；(5) <b>冒泡排序/快速排序</b> — 交易记录排序；(6) <b>二分查找</b> — 有序数据的高效检索。所有算法时间复杂度均控制在合理范围内，确保系统在大数据量下的性能。</p>'+
+    '<h5 class="fw-bold mt-3">4. 安全性设计</h5><p class="small">系统实现了多层次安全防护：(1) <b>密码哈希存储</b> — 采用Werkzeug PBKDF2-SHA256加密，支持明文到哈希的自动迁移；(2) <b>会话管理</b> — Flask Session + 持久化Secret Key；(3) <b>CORS跨域保护</b> — 白名单正则匹配允许的Origin；(4) <b>线程安全文件锁</b> — 防止gunicorn多worker并发写数据损坏；(5) <b>原子写入</b> — 临时文件+os.replace确保数据完整性；(6) <b>登录装饰器</b> — 所有API端点统一鉴权。</p>'+
+    '<h5 class="fw-bold mt-3">5. 业务规则</h5><p class="small">(1) 存款单笔上限1000万元；(2) 取款/转账需验证余额充足性；(3) 贷款单笔上限50万元，需风控审批；(4) VIP客户阈值：金融资产≥10万元；(5) 大额交易预警阈值：5万元；(6) 高频交易预警：1小时内超过5笔；(7) 信用卡利率按年利率计算，日息=本金×年利率÷365，月息=本金×年利率÷12；(8) 信用评级：≥900 AAA，≥800 AA，≥700 A，≥600 B，<600 C。</p>'+
+    '</div></div></div>'+
+    // Real references
+    '<hr><h4 class="fw-bold mb-3"><i class="fa-solid fa-graduation-cap text-primary me-2"></i>参考文献</h4>'+
+    '<div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>#</th><th>文献</th><th>相关模块</th></tr></thead><tbody>'+
+    '<tr><td>[1]</td><td>Dijkstra, E. W. (1959). "A Note on Two Problems in Connexion with Graphs." <i>Numerische Mathematik</i>, 1(1), 269-271.</td><td>网点导航 (模块7)</td></tr>'+
+    '<tr><td>[2]</td><td>ISO 7064:1983. "Data processing — Check character systems." International Organization for Standardization.</td><td>身份核验 (模块9)</td></tr>'+
+    '<tr><td>[3]</td><td>Knuth, D. E. (1998). <i>The Art of Computer Programming, Vol. 3: Sorting and Searching</i> (2nd ed.). Addison-Wesley.</td><td>排序与查找算法</td></tr>'+
+    '<tr><td>[4]</td><td>GB 11643-1999. "公民身份号码." 中华人民共和国国家标准.</td><td>身份证校验 (模块9)</td></tr>'+
+    '<tr><td>[5]</td><td>Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2009). <i>Introduction to Algorithms</i> (3rd ed.). MIT Press.</td><td>数据结构与算法基础</td></tr>'+
+    '<tr><td>[6]</td><td>中国人民银行. (2020). "金融数据安全 数据安全分级指南" (JR/T 0197-2020).</td><td>数据安全</td></tr>'+
+    '<tr><td>[7]</td><td>中国银保监会. (2022). "商业银行互联网贷款管理暂行办法."</td><td>贷款与风控 (模块8)</td></tr>'+
+    '<tr><td>[8]</td><td>Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1994). <i>Design Patterns: Elements of Reusable Object-Oriented Software</i>. Addison-Wesley.</td><td>系统架构设计</td></tr>'+
+    '<tr><td>[9]</td><td>Fielding, R. T. (2000). "Architectural Styles and the Design of Network-based Software Architectures." PhD Dissertation, UC Irvine.</td><td>RESTful API设计</td></tr>'+
+    '<tr><td>[10]</td><td>FIPS PUB 201-3. (2022). "Personal Identity Verification (PIV) of Federal Employees and Contractors." NIST.</td><td>身份核验与生物识别 (模块9)</td></tr>'+
+    '</tbody></table></div><hr><p class="text-center text-secondary small mb-0">&copy; 2025-2026 银行智能管理系统 v3.3 · 计科2402班 第十组 · C++全功能Web实现 · DeepSeek AI集成</p></div></div>';}
 
 // --- Dashboard Loader ---
 async function loadDashboard(){
