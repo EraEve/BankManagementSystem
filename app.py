@@ -34,15 +34,41 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
-# Session cookie: secure over HTTPS (Render), http for local dev
-app.config["SESSION_COOKIE_SECURE"] = os.environ.get("RENDER", False)
-app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-CORS(app, supports_credentials=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
+
+# Persistent secret key: env var → file → auto-generate-and-save
+_secret_file = os.path.join(BASE_DIR, ".flask_secret")
+if os.environ.get("SECRET_KEY"):
+    app.secret_key = os.environ["SECRET_KEY"]
+elif os.path.exists(_secret_file):
+    with open(_secret_file, "rb") as _sf:
+        app.secret_key = _sf.read()
+else:
+    app.secret_key = secrets.token_hex(32)
+    try:
+        with open(_secret_file, "wb") as _sf:
+            raw = app.secret_key.encode() if isinstance(app.secret_key, str) else app.secret_key
+            _sf.write(raw)
+    except (OSError, IOError):
+        pass  # read-only filesystem (some cloud envs) — key lasts until restart
+
+# Detect deployment environment
+_is_render = bool(os.environ.get("RENDER"))
+_is_production = _is_render or os.environ.get("FLASK_ENV") == "production"
+
+# Session cookie config — SameSite=None for cross-origin (GitHub Pages → Render)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = _is_production       # HTTPS only in prod
+app.config["SESSION_COOKIE_SAMESITE"] = "None" if _is_production else "Lax"
+
+# CORS: regex origins for cross-origin credentials (GitHub Pages, local dev)
+CORS(app, origins=[
+    r"https://.*\.github\.io",
+    r"http://localhost:\d+",
+    r"http://127\.0\.0\.1:\d+",
+], supports_credentials=True)
 
 # ============================================================
 # CONSTANTS (matching C++ common.h)
