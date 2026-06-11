@@ -260,12 +260,14 @@ $('login_form').addEventListener('submit',async function(e){
     var r=await api('/api/login',{method:'POST',body:{role:role,account_id:aid,password:pw}});
     if(!r.success){showMsg($('login_msg'),r.message,'danger');return;}
     currentUser=r.data;currentUser.role=role;
+    sessionStorage.setItem('auto_login',JSON.stringify({role:role,userId:r.data.id}));
     $('login_area').classList.add('hidden');
     $('system_area').classList.remove('hidden');
     $('top_user').textContent='当前: '+r.data.name+' ('+(role==='admin'?'管理员':role==='employee'?'职员':'客户')+')';
     buildNavTabs();
 });
 $('logout_btn').addEventListener('click',function(){
+    sessionStorage.clear();
     api('/api/logout',{method:'POST'});
     currentUser=null;$('system_area').classList.add('hidden');$('login_area').classList.remove('hidden');
     $('login_form').reset();$('page_container').innerHTML='';$('nav_tabs').innerHTML='';
@@ -322,6 +324,7 @@ $('register_form').addEventListener('submit',async function(e){
             api('/api/login',{method:'POST',body:{role:'customer',account_id:sid,password:pw}}).then(function(lr){
                 if(lr.success){
                     currentUser=lr.data;currentUser.role='customer';
+                    sessionStorage.setItem('auto_login',JSON.stringify({role:'customer',userId:lr.data.id}));
                     $('login_area').classList.add('hidden');
                     $('system_area').classList.remove('hidden');
                     $('top_user').textContent='当前: '+lr.data.name+' (客户)';
@@ -1287,6 +1290,118 @@ function simpleMarkdownToHtml(md){
     return h;
 }
 
+// --- README Interactive Demo Cards ---
+function readmeDemoCards(){
+    return ''+
+    '<hr class="mt-4">'+
+    '<h4 class="fw-bold mb-3"><i class="fa-solid fa-flask text-success me-2"></i>功能演示区</h4>'+
+    '<p class="text-secondary small mb-3">以下为模块6-9的交互式迷你演示，可直接操作体验。完整功能请访问对应页面。</p>'+
+    '<div class="row g-3">'+
+    // Module 6: Queue
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3">'+
+    '<div class="d-flex align-items-center gap-2 mb-2">'+
+    '<div class="stat-icon" style="width:36px;height:36px;font-size:16px"><i class="fa-solid fa-people-line"></i></div>'+
+    '<h6 class="fw-bold mb-0">模块6 - 排队管理演示</h6></div>'+
+    '<div class="dash-card-mini">'+
+    '<div class="dash-queue-row"><span class="small">VIP队列</span><span class="dash-queue-badge bg-warning text-dark" id="rm6_vip">-</span></div>'+
+    '<div class="dash-queue-row"><span class="small">普通队列</span><span class="dash-queue-badge" style="background:#e9ecef;color:#495057" id="rm6_norm">-</span></div></div>'+
+    '<div class="input-group input-group-sm mt-2">'+
+    '<input type="text" id="rm6_cid" class="form-control form-control-sm" placeholder="客户编号 (如C000001)">'+
+    '<button class="btn btn-primary btn-sm" onclick="rm6TakeTicket()"><i class="fa-solid fa-ticket me-1"></i>取号</button></div>'+
+    '<div id="rm6_msg" class="small mt-2"></div></div></div></div>'+
+    // Module 7: Branch
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3">'+
+    '<div class="d-flex align-items-center gap-2 mb-2">'+
+    '<div class="stat-icon" style="width:36px;height:36px;font-size:16px"><i class="fa-solid fa-map-location-dot"></i></div>'+
+    '<h6 class="fw-bold mb-0">模块7 - 网点导航演示</h6></div>'+
+    '<div class="mb-2"><label class="form-label small mb-1">起始网点</label>'+
+    '<select id="rm7_src" class="form-select form-select-sm"></select></div>'+
+    '<div class="mb-2"><label class="form-label small mb-1">目标网点</label>'+
+    '<select id="rm7_dst" class="form-select form-select-sm"></select></div>'+
+    '<button class="btn btn-primary btn-sm w-100" onclick="rm7DoPath()"><i class="fa-solid fa-route me-1"></i>计算最短路径</button>'+
+    '<div id="rm7_result" class="small mt-2"></div></div></div></div>'+
+    // Module 8: Smart
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3">'+
+    '<div class="d-flex align-items-center gap-2 mb-2">'+
+    '<div class="stat-icon" style="width:36px;height:36px;font-size:16px"><i class="fa-solid fa-brain"></i></div>'+
+    '<h6 class="fw-bold mb-0">模块8 - 智能检测演示</h6></div>'+
+    '<div class="d-flex gap-2 mb-2">'+
+    '<button class="btn btn-warning btn-sm" onclick="rm8DetectLarge()"><i class="fa-solid fa-triangle-exclamation me-1"></i>大额交易检测</button>'+
+    '<button class="btn btn-outline-warning btn-sm" onclick="rm8DetectHighFreq()"><i class="fa-solid fa-clock me-1"></i>高频检测</button></div>'+
+    '<div id="rm8_result" class="small"></div></div></div></div>'+
+    // Module 9: Identity
+    '<div class="col-md-6"><div class="card card-custom h-100"><div class="card-body p-3">'+
+    '<div class="d-flex align-items-center gap-2 mb-2">'+
+    '<div class="stat-icon" style="width:36px;height:36px;font-size:16px"><i class="fa-solid fa-fingerprint"></i></div>'+
+    '<h6 class="fw-bold mb-0">模块9 - 身份核验演示</h6></div>'+
+    '<div class="input-group input-group-sm mb-2">'+
+    '<input type="text" id="rm9_idcard" class="form-control form-control-sm" placeholder="18位身份证号">'+
+    '<button class="btn btn-primary btn-sm" onclick="rm9DoVerify()"><i class="fa-solid fa-check me-1"></i>校验</button></div>'+
+    '<div id="rm9_result" class="small"></div></div></div></div>'+
+    '</div>';
+}
+
+// --- README Demo: Module 6 Queue wrappers ---
+async function rm6LoadQueueSizes(){
+    var r=await api('/api/queue/status');
+    if(!r.success)return;
+    $('rm6_vip').textContent=r.vip_queue_size+' 人';
+    $('rm6_norm').textContent=r.normal_queue_size+' 人';
+}
+async function rm6TakeTicket(){
+    var cid=$('rm6_cid').value.trim();
+    if(!cid){$('rm6_msg').innerHTML='<span class="text-danger small">请输入客户编号</span>';return;}
+    var r=await api('/api/queue/take',{method:'POST',body:{customer_id:cid,service_type:'综合业务'}});
+    if(r.success){$('rm6_msg').innerHTML='<span class="text-success small">'+r.message+'</span>';rm6LoadQueueSizes();}
+    else{$('rm6_msg').innerHTML='<span class="text-danger small">'+r.message+'</span>';}
+}
+
+// --- README Demo: Module 7 Branch wrappers ---
+async function rm7LoadBranches(){
+    var r=await api('/api/branches');
+    if(!r.success||!r.data)return;
+    var sel=function(id){var h='';r.data.forEach(function(b){h+='<option value="'+b.id+'">'+b.id+' '+b.name+'</option>'});$(id).innerHTML=h;};
+    sel('rm7_src');sel('rm7_dst');
+}
+async function rm7DoPath(){
+    var src=$('rm7_src').value,dst=$('rm7_dst').value;
+    if(!src||!dst){$('rm7_result').innerHTML='<span class="text-warning small">请选择起止网点</span>';return;}
+    if(src===dst){$('rm7_result').innerHTML='<span class="text-warning small">起止网点不能相同</span>';return;}
+    var r=await api('/api/branches/'+src+'/path/'+dst);
+    if(r.success){
+        var h='<div class="alert alert-success py-2 small mb-0">总距离: <b>'+r.total_distance+' km</b><br>路径: ';
+        r.path.forEach(function(p,i){h+=p.name+(i<r.path.length-1?' → ':'');});
+        h+='</div>';$('rm7_result').innerHTML=h;
+    }else{$('rm7_result').innerHTML='<div class="alert alert-danger py-2 small mb-0">'+r.message+'</div>';}
+}
+
+// --- README Demo: Module 8 Smart wrappers ---
+async function rm8DetectLarge(){
+    var r=await api('/api/smart/anomaly/large');
+    var h='<b>大额交易 (&gt;5万): '+r.count+' 笔</b>';
+    if(r.count>0){h+='<br>';(r.data||[]).slice(0,3).forEach(function(t){h+=t.id+': '+t.type+' '+fmt(t.amount)+' ('+t.time+')<br>';});if(r.count>3)h+='<small class="text-secondary">...还有 '+(r.count-3)+' 笔</small>';}
+    else h+='<br><small class="text-success">无异常交易</small>';
+    $('rm8_result').innerHTML=h;
+}
+async function rm8DetectHighFreq(){
+    var r=await api('/api/smart/anomaly/high_freq');
+    var h='<b>高频交易 (&gt;5笔/时): '+r.count+' 人</b>';
+    if(r.count>0){h+='<br>';(r.data||[]).slice(0,3).forEach(function(a){h+=a.customer_id+': '+a.hour+'h内 '+a.count+' 笔<br>';});if(r.count>3)h+='<small class="text-secondary">...还有 '+(r.count-3)+' 人</small>';}
+    else h+='<br><small class="text-success">无高频交易</small>';
+    $('rm8_result').innerHTML=h;
+}
+
+// --- README Demo: Module 9 Identity wrapper ---
+async function rm9DoVerify(){
+    var idcard=$('rm9_idcard').value.trim();
+    if(!idcard){$('rm9_result').innerHTML='<span class="text-warning small">请输入身份证号</span>';return;}
+    var r=await api('/api/identity/verify-id',{method:'POST',body:{id_card:idcard}});
+    var d=r.data,h='';
+    if(d.valid){h+=bad('✓ 校验通过')+'<br>省份: '+d.province+'<br>出生: '+d.birth+'<br>性别: '+d.gender+'<br>年龄: '+d.age;}
+    else h+=bad('✗ '+d.message,'warn');
+    $('rm9_result').innerHTML=h;
+}
+
 function readmePage(){
     return '<div class="card card-custom"><div class="card-body p-4">'+
     '<div class="d-flex align-items-center gap-3 mb-3">'+
@@ -1316,6 +1431,9 @@ async function loadReadme(){
         var html=simpleMarkdownToHtml(r.content);
         el.innerHTML='<div class="readme-rendered">'+html+'</div>';
         el.innerHTML+='<hr class="mt-4"><p class="text-center text-secondary small mb-0"><i class="fa-solid fa-file-lines me-1"></i>以上内容来自项目根目录 README.md · 实时读取</p>';
+        // Append interactive module 6-9 demo cards
+        el.innerHTML+=readmeDemoCards();
+        rm7LoadBranches();rm6LoadQueueSizes();
     }catch(e){
         el.innerHTML='<div class="alert alert-danger py-3"><i class="fa-solid fa-bug me-2"></i>渲染失败: '+esc(e.message)+'<br><small class="text-secondary mt-2 d-block">请刷新页面后重试，或检查浏览器控制台</small></div>';
     }
@@ -1741,6 +1859,40 @@ function renderDashAlerts(d){
     h+='</div></div>';
     el.innerHTML=h;
 }
+</script>
+<script>
+// ==================== AUTO-LOGIN & INACTIVITY TIMER ====================
+(function(){
+    // --- Auto-login on page load ---
+    var saved=sessionStorage.getItem('auto_login');
+    if(saved){
+        fetch(API_BASE+'/api/session',{credentials:'include'}).then(function(r){return r.json()}).then(function(r){
+            if(r.success){
+                currentUser=r.data;currentUser.role=r.data.role;
+                $('login_area').classList.add('hidden');
+                $('system_area').classList.remove('hidden');
+                $('top_user').textContent='当前: '+r.data.name+' ('+(r.data.role==='admin'?'管理员':r.data.role==='employee'?'职员':'客户')+')';
+                buildNavTabs();
+            }else{sessionStorage.clear();}
+        }).catch(function(){sessionStorage.clear();});
+    }
+
+    // --- Inactivity timer (2 minutes) ---
+    var IDLE_TIMEOUT=120000,idleTimer=null;
+    function resetIdleTimer(){
+        if(!currentUser)return;
+        if(idleTimer)clearTimeout(idleTimer);
+        idleTimer=setTimeout(function(){
+            var activeNav=document.querySelector('#nav_tabs .nav-link.active');
+            if(activeNav)sessionStorage.setItem('last_page',activeNav.getAttribute('data-page'));
+            location.reload();
+        },IDLE_TIMEOUT);
+    }
+    ['click','keypress','scroll','touchstart','mousemove'].forEach(function(evt){
+        document.addEventListener(evt,resetIdleTimer,{passive:true});
+    });
+    resetIdleTimer();
+})();
 </script>
 </body>
 </html>
