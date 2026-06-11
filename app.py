@@ -21,14 +21,25 @@ import os
 import json
 import time
 import math
+import uuid
+import secrets
 import threading
 import webbrowser
+import calendar
 from datetime import datetime
-from flask import Flask, jsonify, request, send_from_directory
+from functools import wraps
+
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+# Session cookie: secure over HTTPS (Render), http for local dev
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("RENDER", False)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+CORS(app, supports_credentials=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -50,9 +61,43 @@ CUSTOMER_FILE = os.path.join(DATA_DIR, "customer.txt")
 CARD_FILE = os.path.join(DATA_DIR, "card.txt")
 TRANSACTION_FILE = os.path.join(DATA_DIR, "transaction.txt")
 QUEUE_FILE = os.path.join(DATA_DIR, "queue.txt")
+QUEUE_STATE_FILE = os.path.join(DATA_DIR, "queue_state.txt")  # in-memory queue snapshot
 BRANCH_FILE = os.path.join(DATA_DIR, "branch.txt")
 GRAPH_FILE = os.path.join(DATA_DIR, "branch_graph.txt")
 STATS_FILE = os.path.join(DATA_DIR, "daily_stats.txt")
+
+# ============================================================
+# THREAD-SAFE FILE LOCKS (prevents data corruption under gunicorn)
+# ============================================================
+_file_locks = {}
+def _flock(filepath):
+    """Get-or-create a per-file threading.Lock."""
+    if filepath not in _file_locks:
+        _file_locks[filepath] = threading.Lock()
+    return _file_locks[filepath]
+
+# ============================================================
+# LOGIN-REQUIRED DECORATOR
+# ============================================================
+def login_required(f):
+    """Decorator: reject requests without a valid session."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user" not in session:
+            return jsonify({"success": False, "message": "请先登录"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# ============================================================
+# PASSWORD HELPERS (auto-migrate plaintext → hashed)
+# ============================================================
+def verify_password(plain, stored):
+    """Check plaintext password against stored (plaintext or hashed).
+    Returns (is_valid, needs_rehash)."""
+    if stored.startswith("pbkdf2:sha256:"):
+        return check_password_hash(stored, plain), False
+    # Legacy plaintext — valid, but needs migration
+    return (plain == stored), (plain == stored)
 
 # ============================================================
 # UTILITY FUNCTIONS
@@ -81,28 +126,40 @@ def today_str():
     return datetime.now().strftime("%Y-%m-%d")
 
 def gen_txn_id():
-    return "T{}{:04d}".format(int(time.time() * 1000), int(time.time() * 1000) % 10000)
+    return "T{}{:04d}".format(int(time.time() * 1000), uuid.uuid4().int % 10000)
 
 def read_lines(filepath):
-    """Read pipe-delimited lines, skip empty."""
+    """Read pipe-delimited lines, skip empty (thread-safe)."""
     lines = []
     if os.path.exists(filepath):
-        with open(filepath, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    lines.append(line)
+        with _flock(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        lines.append(line)
     return lines
 
 def write_lines(filepath, lines):
-    """Write lines with newline."""
-    with open(filepath, "w", encoding="utf-8") as f:
-        for line in lines:
-            f.write(line + "\n")
+    """Write lines with newline (thread-safe, atomic via temp+rename)."""
+    import tempfile
+    dirpath = os.path.dirname(filepath)
+    with _flock(filepath):
+        fd, tmppath = tempfile.mkstemp(dir=dirpath, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                for line in lines:
+                    f.write(line + "\n")
+            os.replace(tmppath, filepath)  # atomic on same filesystem
+        except Exception:
+            os.unlink(tmppath)
+            raise
 
 def append_line(filepath, line):
-    with open(filepath, "a", encoding="utf-8") as f:
-        f.write(line + "\n")
+    """Append one line (thread-safe)."""
+    with _flock(filepath):
+        with open(filepath, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
 
 # ============================================================
 # DATA FILE INITIALIZATION (create defaults if missing)
@@ -390,11 +447,54 @@ def write_daily_stats(data):
     write_lines(STATS_FILE, lines)
 
 # ============================================================
-# IN-MEMORY QUEUE STATE
+# IN-MEMORY QUEUE STATE (with persistence for restart survival)
 # ============================================================
 vip_queue = []       # list simulating LinkedQueue FIFO
 normal_queue = []
 ticket_counter = 1000
+
+def save_queue_state():
+    """Save in-memory queue to disk so waiting tickets survive restart."""
+    lines = []
+    for t in vip_queue + normal_queue:
+        lines.append("{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}".format(
+            t["id"], t["customer_id"], t["customer_name"],
+            t["customer_type"], t.get("window_id", -1),
+            t["service_type"], t["arrive_time"],
+            t.get("start_time", ""), t.get("end_time", ""),
+            t.get("rating", 0), t.get("status", "等待中")
+        ))
+    write_lines(QUEUE_STATE_FILE, lines)
+
+def restore_queue_state():
+    """Restore in-memory queue from disk on startup."""
+    global vip_queue, normal_queue, ticket_counter
+    for line in read_lines(QUEUE_STATE_FILE):
+        p = line.split("|")
+        if len(p) < 11:
+            continue
+        ticket = {
+            "id": p[0], "customer_id": p[1], "customer_name": p[2],
+            "customer_type": p[3], "window_id": safe_int(p[4], -1),
+            "service_type": p[5], "arrive_time": p[6],
+            "start_time": p[7], "end_time": p[8],
+            "rating": safe_int(p[9], 0), "status": p[10],
+            "priority": 10 if p[3] == "VIP" else 0
+        }
+        if ticket["customer_type"] == "VIP":
+            vip_queue.append(ticket)
+        else:
+            normal_queue.append(ticket)
+        # Keep ticket_counter above the max restored ticket ID
+        try:
+            num = int(p[0][1:])  # e.g. "Q1234" → 1234
+            if num > ticket_counter:
+                ticket_counter = num
+        except ValueError:
+            pass
+
+# Restore queue on module load
+restore_queue_state()
 
 # ============================================================
 # ALGORITHM IMPLEMENTATIONS
@@ -444,8 +544,10 @@ def validate_chinese_id_card(id_str):
         return False, "出生年份超出范围"
     if month < 1 or month > 12:
         return False, "出生月份无效"
-    if day < 1 or day > 31:
-        return False, "出生日期无效"
+    # Validate actual calendar days (e.g. Feb 30 is invalid)
+    max_day = calendar.monthrange(year, month)[1]
+    if day < 1 or day > max_day:
+        return False, f"出生日期无效 ({year}年{month}月最多{max_day}天)"
 
     weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
     check_map = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
@@ -572,9 +674,15 @@ def api_login():
         employees = read_employees()
         for emp in employees:
             if emp["id"] == account_id and emp["is_active"]:
-                if emp["password"] == password:
+                valid, needs_rehash = verify_password(password, emp["password"])
+                if valid:
                     if emp["role"] != "admin":
                         return jsonify({"success": False, "message": "非管理员账户!"}), 403
+                    if needs_rehash:
+                        emp["password"] = generate_password_hash(password)
+                        write_employees(employees)
+                    session["user"] = {"id": emp["id"], "name": emp["name"],
+                                       "role": "admin", "department": emp["department"]}
                     return jsonify({"success": True, "message": "管理员登录成功",
                                     "data": {"id": emp["id"], "name": emp["name"], "role": "admin",
                                              "department": emp["department"]}})
@@ -584,7 +692,13 @@ def api_login():
         employees = read_employees()
         for emp in employees:
             if emp["id"] == account_id and emp["is_active"]:
-                if emp["password"] == password:
+                valid, needs_rehash = verify_password(password, emp["password"])
+                if valid:
+                    if needs_rehash:
+                        emp["password"] = generate_password_hash(password)
+                        write_employees(employees)
+                    session["user"] = {"id": emp["id"], "name": emp["name"],
+                                       "role": emp["role"], "department": emp["department"]}
                     return jsonify({"success": True, "message": "职员登录成功",
                                     "data": {"id": emp["id"], "name": emp["name"], "role": emp["role"],
                                              "department": emp["department"]}})
@@ -595,10 +709,14 @@ def api_login():
         customers = read_customers()
         for c in customers:
             if c["id"] == account_id and c.get("is_active", True):
-                if c["password"] == password:
-                    # Get cards for this customer
+                valid, needs_rehash = verify_password(password, c["password"])
+                if valid:
+                    if needs_rehash:
+                        c["password"] = generate_password_hash(password)
+                        write_customers(customers)
                     cards = read_cards()
                     my_cards = [cd for cd in cards if cd["customer_id"] == c["id"]]
+                    session["user"] = {"id": c["id"], "name": c["name"], "role": "customer"}
                     return jsonify({"success": True, "message": "客户登录成功",
                                     "data": {"id": c["id"], "name": c["name"], "role": "customer",
                                              "type": c["type"], "credit_score": c["credit_score"],
@@ -607,13 +725,19 @@ def api_login():
                                              "id_card": c.get("id_card", ""),
                                              "cards": my_cards}})
 
-        # Fallback: try account.txt (50 students)
+        # Fallback: try account.txt (50 students) — legacy accounts
         accounts = read_accounts()
         for acc in accounts:
             if acc["id"] == account_id:
                 if acc["is_locked"]:
                     return jsonify({"success": False, "message": "账户已锁定"}), 403
-                if acc["password"] == password:
+                valid, needs_rehash = verify_password(password, acc["password"])
+                if valid:
+                    if needs_rehash:
+                        acc["password"] = generate_password_hash(password)
+                        write_accounts(accounts)
+                    session["user"] = {"id": acc["id"], "name": acc["name"],
+                                       "role": "admin" if acc["is_admin"] else "customer"}
                     return jsonify({"success": True, "message": "登录成功",
                                     "data": {"id": acc["id"], "name": acc["name"],
                                              "role": "admin" if acc["is_admin"] else "customer",
@@ -622,16 +746,23 @@ def api_login():
 
         return jsonify({"success": False, "message": "账号或密码错误"}), 401
 
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    session.pop("user", None)
+    return jsonify({"success": True, "message": "已登出"})
+
 # ============================================================
 # MODULE 1: EMPLOYEE MANAGEMENT
 # ============================================================
 
 @app.route("/api/employees", methods=["GET"])
+@login_required
 def api_list_employees():
     employees = read_employees()
     return jsonify({"success": True, "count": len(employees), "data": employees})
 
 @app.route("/api/employees", methods=["POST"])
+@login_required
 def api_add_employee():
     data = request.get_json(silent=True) or {}
     eid = str(data.get("id", "")).strip()
@@ -648,7 +779,8 @@ def api_add_employee():
         return jsonify({"success": False, "message": "密码必须为6位数字"}), 400
 
     emp = {
-        "id": eid, "name": data.get("name", ""), "password": pw,
+        "id": eid, "name": data.get("name", ""),
+        "password": generate_password_hash(pw),  # hashed
         "role": data.get("role", "staff"), "department": data.get("department", ""),
         "phone": data.get("phone", ""), "email": data.get("email", ""),
         "hire_date": today_str(), "is_active": True
@@ -658,6 +790,7 @@ def api_add_employee():
     return jsonify({"success": True, "message": f"职员 {emp['name']} 添加成功!", "data": emp})
 
 @app.route("/api/employees/<eid>", methods=["PUT"])
+@login_required
 def api_modify_employee(eid):
     data = request.get_json(silent=True) or {}
     employees = read_employees()
@@ -673,6 +806,7 @@ def api_modify_employee(eid):
     return jsonify({"success": False, "message": "职员不存在"}), 404
 
 @app.route("/api/employees/<eid>", methods=["DELETE"])
+@login_required
 def api_delete_employee(eid):
     employees = read_employees()
     for emp in employees:
@@ -685,6 +819,7 @@ def api_delete_employee(eid):
     return jsonify({"success": False, "message": "职员不存在"}), 404
 
 @app.route("/api/employees/<eid>/password", methods=["PUT"])
+@login_required
 def api_reset_employee_password(eid):
     data = request.get_json(silent=True) or {}
     new_pw = str(data.get("password", "")).strip()
@@ -694,7 +829,7 @@ def api_reset_employee_password(eid):
     employees = read_employees()
     for emp in employees:
         if emp["id"] == eid:
-            emp["password"] = new_pw
+            emp["password"] = generate_password_hash(new_pw)  # hashed
             write_employees(employees)
             return jsonify({"success": True, "message": "密码已重置!"})
     return jsonify({"success": False, "message": "职员不存在"}), 404
@@ -704,6 +839,7 @@ def api_reset_employee_password(eid):
 # ============================================================
 
 @app.route("/api/customers", methods=["GET"])
+@login_required
 def api_list_customers():
     customers = read_customers()
     # Also include accounts from account.txt
@@ -722,6 +858,7 @@ def api_list_customers():
     return jsonify({"success": True, "count": len(customers), "data": customers})
 
 @app.route("/api/customers", methods=["POST"])
+@login_required
 def api_add_customer():
     data = request.get_json(silent=True) or {}
     cid = str(data.get("id", "")).strip()
@@ -734,7 +871,7 @@ def api_add_customer():
 
     customer = {
         "id": cid, "name": data.get("name", ""),
-        "password": data.get("password", "123456"),
+        "password": generate_password_hash(data.get("password", "123456")),  # hashed
         "type": data.get("type", "普通"),
         "phone": data.get("phone", ""),
         "open_date": today_str(),
@@ -750,6 +887,7 @@ def api_add_customer():
     return jsonify({"success": True, "message": f"客户 {customer['name']} 添加成功!", "data": customer})
 
 @app.route("/api/customers/<cid>", methods=["GET"])
+@login_required
 def api_get_customer(cid):
     customers = read_customers()
     for c in customers:
@@ -761,6 +899,7 @@ def api_get_customer(cid):
     return jsonify({"success": False, "message": "客户不存在"}), 404
 
 @app.route("/api/customers/<cid>", methods=["PUT"])
+@login_required
 def api_modify_customer(cid):
     data = request.get_json(silent=True) or {}
     customers = read_customers()
@@ -777,6 +916,7 @@ def api_modify_customer(cid):
     return jsonify({"success": False, "message": "客户不存在"}), 404
 
 @app.route("/api/customers/<cid>", methods=["DELETE"])
+@login_required
 def api_delete_customer(cid):
     customers = read_customers()
     for c in customers:
@@ -791,6 +931,7 @@ def api_delete_customer(cid):
 # ============================================================
 
 @app.route("/api/cards", methods=["GET"])
+@login_required
 def api_list_cards():
     cards = read_cards()
     # Enrich with customer names
@@ -800,6 +941,7 @@ def api_list_cards():
     return jsonify({"success": True, "count": len(cards), "data": cards})
 
 @app.route("/api/cards", methods=["POST"])
+@login_required
 def api_add_card():
     data = request.get_json(silent=True) or {}
     cid = str(data.get("id", "")).strip()
@@ -825,6 +967,7 @@ def api_add_card():
     return jsonify({"success": True, "message": f"银行卡 {card['id']} 添加成功!", "data": card})
 
 @app.route("/api/cards/<cid>", methods=["PUT"])
+@login_required
 def api_modify_card(cid):
     data = request.get_json(silent=True) or {}
     cards = read_cards()
@@ -841,6 +984,7 @@ def api_modify_card(cid):
     return jsonify({"success": False, "message": "银行卡不存在"}), 404
 
 @app.route("/api/cards/<cid>", methods=["DELETE"])
+@login_required
 def api_delete_card(cid):
     cards = read_cards()
     for card in cards:
@@ -907,6 +1051,7 @@ def _do_transaction(from_card, to_card, ttype, amount, emp_id="", remark=""):
     return True, txn
 
 @app.route("/api/deposit", methods=["POST"])
+@login_required
 def api_deposit():
     data = request.get_json(silent=True) or {}
     account_id = str(data.get("account_id", "")).strip()
@@ -939,6 +1084,7 @@ def api_deposit():
     return jsonify({"success": False, "message": result}), 400
 
 @app.route("/api/withdraw", methods=["POST"])
+@login_required
 def api_withdraw():
     data = request.get_json(silent=True) or {}
     account_id = str(data.get("account_id", "")).strip()
@@ -969,6 +1115,7 @@ def api_withdraw():
     return jsonify({"success": False, "message": result}), 400
 
 @app.route("/api/transfer", methods=["POST"])
+@login_required
 def api_transfer():
     data = request.get_json(silent=True) or {}
     from_id = str(data.get("from_account", "")).strip()
@@ -1010,6 +1157,7 @@ def api_transfer():
     return jsonify({"success": False, "message": result}), 400
 
 @app.route("/api/loan", methods=["POST"])
+@login_required
 def api_loan():
     data = request.get_json(silent=True) or {}
     account_id = str(data.get("account_id", "")).strip()
@@ -1025,6 +1173,7 @@ def api_loan():
     return jsonify({"success": False, "message": result}), 400
 
 @app.route("/api/repay", methods=["POST"])
+@login_required
 def api_repay():
     data = request.get_json(silent=True) or {}
     account_id = str(data.get("account_id", "")).strip()
@@ -1042,8 +1191,13 @@ def api_repay():
                 return jsonify({"success": False, "message": "无贷款需要偿还"}), 400
             if amount > loan:
                 amount = loan
+            # BUGFIX: reject if card balance insufficient (match C++ logic)
+            balance = card.get("balance", 0)
+            if amount > balance:
+                return jsonify({"success": False, "message":
+                    f"卡内余额不足! 当前余额: {balance:.2f}, 需还款: {amount:.2f}"}), 400
             card["loan_balance"] = loan - amount
-            card["balance"] = max(0, card.get("balance", 0) - amount)
+            card["balance"] = balance - amount
             write_cards(cards)
             txn = {"id": gen_txn_id(), "from_card": account_id, "to_card": "系统",
                    "type": "还款", "amount": amount, "time": now_str(), "status": "成功",
@@ -1058,6 +1212,7 @@ def api_repay():
 # ============================================================
 
 @app.route("/api/transactions", methods=["GET"])
+@login_required
 def api_get_transactions():
     transactions = read_transactions()
     # Support query params
@@ -1125,6 +1280,7 @@ def api_get_transactions():
                     "summary": summary})
 
 @app.route("/api/transactions/summary", methods=["GET"])
+@login_required
 def api_transaction_summary():
     transactions = read_transactions()
     summary = {"存款": {"count": 0, "total": 0}, "取款": {"count": 0, "total": 0},
@@ -1141,6 +1297,7 @@ def api_transaction_summary():
 # ============================================================
 
 @app.route("/api/queue/take", methods=["POST"])
+@login_required
 def api_take_ticket():
     global vip_queue, normal_queue, ticket_counter
     data = request.get_json(silent=True) or {}
@@ -1184,12 +1341,14 @@ def api_take_ticket():
     else:
         normal_queue.append(ticket)
 
+    save_queue_state()
     return jsonify({"success": True, "message": f"取号成功! 票号: {ticket['id']}",
                     "data": ticket,
                     "vip_queue_size": len(vip_queue),
                     "normal_queue_size": len(normal_queue)})
 
 @app.route("/api/queue/call", methods=["POST"])
+@login_required
 def api_call_ticket():
     global vip_queue, normal_queue
     data = request.get_json(silent=True) or {}
@@ -1255,11 +1414,13 @@ def api_call_ticket():
         else:
             normal_queue.append(ticket)
 
+    save_queue_state()
     return jsonify({"success": True, "data": ticket,
                     "vip_queue_size": len(vip_queue),
                     "normal_queue_size": len(normal_queue)})
 
 @app.route("/api/queue/status", methods=["GET"])
+@login_required
 def api_queue_status():
     return jsonify({
         "success": True,
@@ -1270,11 +1431,13 @@ def api_queue_status():
     })
 
 @app.route("/api/queue/history", methods=["GET"])
+@login_required
 def api_queue_history():
     history = read_queue_history()
     return jsonify({"success": True, "count": len(history), "data": history})
 
 @app.route("/api/queue/stats", methods=["GET"])
+@login_required
 def api_daily_stats():
     stats = read_daily_stats()
     return jsonify({"success": True, "count": len(stats), "data": stats})
@@ -1284,6 +1447,7 @@ def api_daily_stats():
 # ============================================================
 
 @app.route("/api/branches", methods=["GET"])
+@login_required
 def api_list_branches():
     branches = read_branches()
     graph = read_branch_graph()
@@ -1291,6 +1455,7 @@ def api_list_branches():
                     "data": branches, "graph": graph})
 
 @app.route("/api/branches", methods=["POST"])
+@login_required
 def api_add_branch():
     data = request.get_json(silent=True) or {}
     bid = str(data.get("id", "")).strip()
@@ -1321,6 +1486,7 @@ def api_add_branch():
     return jsonify({"success": True, "message": f"网点 {branch['name']} 添加成功!", "data": branch})
 
 @app.route("/api/branches/<bid>", methods=["PUT"])
+@login_required
 def api_modify_branch(bid):
     data = request.get_json(silent=True) or {}
     branches = read_branches()
@@ -1334,6 +1500,7 @@ def api_modify_branch(bid):
     return jsonify({"success": False, "message": "网点不存在"}), 404
 
 @app.route("/api/branches/<bid>", methods=["DELETE"])
+@login_required
 def api_delete_branch(bid):
     branches = read_branches()
     graph = read_branch_graph()
@@ -1358,6 +1525,7 @@ def api_delete_branch(bid):
     return jsonify({"success": True, "message": "网点已删除"})
 
 @app.route("/api/branches/path", methods=["POST"])
+@login_required
 def api_set_branch_path():
     data = request.get_json(silent=True) or {}
     src = str(data.get("src", "")).strip()
@@ -1379,6 +1547,7 @@ def api_set_branch_path():
     return jsonify({"success": True, "message": f"路径 {src}→{dst} = {dist}km 已设置"})
 
 @app.route("/api/branches/<src_id>/path/<dst_id>", methods=["GET"])
+@login_required
 def api_shortest_path(src_id, dst_id):
     branches = read_branches()
     graph = read_branch_graph()
@@ -1412,6 +1581,7 @@ def api_shortest_path(src_id, dst_id):
     return jsonify({"success": True, "total_distance": dist[dst], "path": path})
 
 @app.route("/api/branches/<src_id>/reachable", methods=["GET"])
+@login_required
 def api_reachable_branches(src_id):
     branches = read_branches()
     graph = read_branch_graph()
@@ -1438,6 +1608,7 @@ def api_reachable_branches(src_id):
 # ============================================================
 
 @app.route("/api/smart/anomaly/large", methods=["GET"])
+@login_required
 def api_detect_large_amount():
     """Detect large-amount transactions."""
     threshold = safe_float(request.args.get("threshold", ""), LARGE_AMOUNT)
@@ -1447,6 +1618,7 @@ def api_detect_large_amount():
                     "count": len(anomalies), "data": anomalies})
 
 @app.route("/api/smart/anomaly/high_freq", methods=["GET"])
+@login_required
 def api_detect_high_frequency():
     """Detect high-frequency transactions (sliding window: >MULTI_TRANSACTION in 1 hour)."""
     transactions = read_transactions()
@@ -1480,6 +1652,7 @@ def api_detect_high_frequency():
                     "count": len(anomalies), "data": anomalies})
 
 @app.route("/api/smart/interest", methods=["GET"])
+@login_required
 def api_calc_interest():
     """Calculate daily/monthly interest for all cards."""
     calc_type = request.args.get("type", "daily")
@@ -1507,6 +1680,7 @@ def api_calc_interest():
                     "data": results})
 
 @app.route("/api/smart/customer-stats", methods=["GET"])
+@login_required
 def api_customer_stats():
     """Customer statistics and credit rating distribution."""
     customers = read_customers()
@@ -1543,6 +1717,7 @@ def api_customer_stats():
     }})
 
 @app.route("/api/smart/risk/<cid>", methods=["GET"])
+@login_required
 def api_risk_approval(cid):
     """Risk assessment for a customer."""
     customers = read_customers()
@@ -1598,6 +1773,7 @@ def api_risk_approval(cid):
     }})
 
 @app.route("/api/smart/investment/<cid>", methods=["GET"])
+@login_required
 def api_investment_advisor(cid):
     """Investment advisor based on credit score and available cash."""
     customers = read_customers()
@@ -1650,6 +1826,7 @@ def api_investment_advisor(cid):
 # ============================================================
 
 @app.route("/api/identity/verify-id", methods=["POST"])
+@login_required
 def api_verify_id_card():
     """Validate a Chinese 18-digit ID card (ISO 7064 MOD 11-2)."""
     data = request.get_json(silent=True) or {}
@@ -1665,6 +1842,7 @@ def api_verify_id_card():
     return jsonify({"success": True, "data": result})
 
 @app.route("/api/identity/biometric/generate", methods=["POST"])
+@login_required
 def api_generate_biometric():
     """Generate biometric template from ID card."""
     data = request.get_json(silent=True) or {}
@@ -1675,6 +1853,7 @@ def api_generate_biometric():
     return jsonify({"success": True, "data": {"id_card": id_card, "template": template}})
 
 @app.route("/api/identity/biometric/compare", methods=["POST"])
+@login_required
 def api_compare_biometric():
     """Compare two biometric templates."""
     data = request.get_json(silent=True) or {}
@@ -1691,6 +1870,7 @@ def api_compare_biometric():
     }})
 
 @app.route("/api/identity/verify-all", methods=["POST"])
+@login_required
 def api_verify_all_customers():
     """Batch verify all customer ID cards."""
     customers = read_customers()
@@ -1715,6 +1895,7 @@ def api_verify_all_customers():
 # ============================================================
 
 @app.route("/api/dashboard", methods=["GET"])
+@login_required
 def api_dashboard():
     """Overview statistics for the dashboard."""
     employees = read_employees()
@@ -1737,6 +1918,7 @@ def api_dashboard():
     }})
 
 @app.route("/api/accounts", methods=["GET"])
+@login_required
 def api_legacy_accounts():
     """Legacy: list all account.txt accounts (50 students)."""
     accounts = read_accounts()

@@ -1,7 +1,11 @@
 import json
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
 accounts = []
-with open(r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\data\account.txt', 'r', encoding='utf-8') as f:
+with open(os.path.join(DATA_DIR, "account.txt"), 'r', encoding='utf-8') as f:
     for line in f:
         line = line.strip()
         if not line: continue
@@ -11,7 +15,7 @@ with open(r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\data\account.txt'
 
 tx_map = {'100001':'202418440201','100002':'202418440202','100003':'202418440203','100004':'202418440204'}
 transactions = []
-with open(r'C:\Users\Lenovo\Desktop\BankManagementSystem_clone\data\transaction.txt', 'r', encoding='utf-8') as f:
+with open(os.path.join(DATA_DIR, "transaction.txt"), 'r', encoding='utf-8') as f:
     for line in f:
         line = line.strip()
         if not line: continue

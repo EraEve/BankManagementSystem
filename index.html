@@ -92,6 +92,7 @@ var currentUser = null;
 var API_BASE = (function(){var h=window.location.hostname;if(h.includes('github.io')||h.includes('githubusercontent.com'))return'https://eraeve-bank-system.onrender.com';return'';})();
 
 function $(id){return document.getElementById(id);}
+function esc(s){var d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function fmt(v){return '&yen;'+Number(v||0).toFixed(2);}
 function fmtNum(v){return Number(v||0).toFixed(2);}
 function bad(s,t){t=t||'success';return '<span class="badge badge-status-'+(t==='success'?'ok':'fail')+'">'+s+'</span>';}
@@ -102,7 +103,7 @@ function showMsg(el,txt,type){
 async function api(url,opts){
     opts=opts||{};var headers={'Content-Type':'application/json'};
     if(opts.body)opts.body=JSON.stringify(opts.body);
-    try{var r=await fetch(API_BASE+url,{method:opts.method||'GET',headers:headers,body:opts.body});return await r.json();}
+    try{var r=await fetch(API_BASE+url,{method:opts.method||'GET',headers:headers,body:opts.body,credentials:'include'});return await r.json();}
     catch(e){return{success:false,message:'网络错误: '+e.message}};
 }
 
@@ -213,6 +214,7 @@ $('login_form').addEventListener('submit',async function(e){
     buildNavTabs();
 });
 $('logout_btn').addEventListener('click',function(){
+    api('/api/logout',{method:'POST'});
     currentUser=null;$('system_area').classList.add('hidden');$('login_area').classList.remove('hidden');
     $('login_form').reset();$('page_container').innerHTML='';$('nav_tabs').innerHTML='';
 });
@@ -258,8 +260,8 @@ async function loadEmployees(){
     if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无职员</td></tr>';return;}
     r.data.forEach(function(e){
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+e.id+'</td><td>'+e.name+'</td><td>'+e.role+'</td><td>'+e.department+'</td><td>'+e.phone+'</td><td>'+e.email+'</td><td>'+e.hire_date+'</td><td>'+(e.is_active?bad('在职'):bad('离职','warn'))+'</td>'+
-        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editEmp(\''+e.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-warning btn-sm" onclick="resetEmpPw(\''+e.id+'\')"><i class="fa-solid fa-key"></i></button>'+(e.role!=='admin'?'<button class="btn btn-outline-danger btn-sm" onclick="delEmp(\''+e.id+'\')"><i class="fa-solid fa-trash"></i></button>':'')+'</div></td>';
+        tr.innerHTML='<td>'+esc(e.id)+'</td><td>'+esc(e.name)+'</td><td>'+esc(e.role)+'</td><td>'+esc(e.department)+'</td><td>'+esc(e.phone)+'</td><td>'+esc(e.email)+'</td><td>'+esc(e.hire_date)+'</td><td>'+(e.is_active?bad('在职'):bad('离职','warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editEmp(\''+esc(e.id)+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-warning btn-sm" onclick="resetEmpPw(\''+esc(e.id)+'\')"><i class="fa-solid fa-key"></i></button>'+(e.role!=='admin'?'<button class="btn btn-outline-danger btn-sm" onclick="delEmp(\''+esc(e.id)+'\')"><i class="fa-solid fa-trash"></i></button>':'')+'</div></td>';
         tbody.appendChild(tr);
     });
 }
@@ -316,8 +318,9 @@ async function loadCustomers(){
     if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无客户</td></tr>';return;}
     r.data.forEach(function(c){
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+c.id+'</td><td>'+c.name+'</td><td>'+(c.type==='VIP'?'<span class="badge bg-warning text-dark">VIP</span>':'普通')+'</td><td>'+c.phone+'</td><td>'+c.credit_score+'</td><td>'+fmt(c.financial_assets)+'</td><td>'+(c.address||'-')+'</td><td>'+(c.is_active!==false?bad('正常'):bad('注销','warn'))+'</td>'+
-        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCust(\''+c.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-info btn-sm" onclick="viewCust(\''+c.id+'\')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCust(\''+c.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
+        var cid=esc(c.id);
+        tr.innerHTML='<td>'+cid+'</td><td>'+esc(c.name)+'</td><td>'+(c.type==='VIP'?'<span class="badge bg-warning text-dark">VIP</span>':'普通')+'</td><td>'+esc(c.phone)+'</td><td>'+c.credit_score+'</td><td>'+fmt(c.financial_assets)+'</td><td>'+esc(c.address||'-')+'</td><td>'+(c.is_active!==false?bad('正常'):bad('注销','warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCust(\''+cid+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-info btn-sm" onclick="viewCust(\''+cid+'\')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCust(\''+cid+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
         tbody.appendChild(tr);
     });
 }
@@ -368,8 +371,9 @@ async function loadCards(){
     if(!r.data||r.data.length===0){tbody.innerHTML='<tr><td colspan="9" class="text-center py-3 text-secondary">暂无银行卡</td></tr>';return;}
     r.data.forEach(function(c){
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+c.id+'</td><td>'+c.customer_id+' ('+(c.customer_name||'')+')</td><td>'+c.type+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>'+
-        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCard(\''+c.id+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCard(\''+c.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
+        var cardId=esc(c.id);
+        tr.innerHTML='<td>'+cardId+'</td><td>'+esc(c.customer_id)+' ('+esc(c.customer_name||'')+')</td><td>'+esc(c.type)+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>'+
+        '<td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary btn-sm" onclick="editCard(\''+cardId+'\')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-outline-danger btn-sm" onclick="delCard(\''+cardId+'\')"><i class="fa-solid fa-trash"></i></button></div></td>';
         tbody.appendChild(tr);
     });
 }
@@ -735,7 +739,7 @@ async function loadMyCards(){
     // Also check account.txt (simplified)
     if(myCards.length===0){tbody.innerHTML='<tr><td class="text-center py-2 text-secondary" colspan="7">当前为简化账户，无独立银行卡信息。请使用业务办理功能进行操作。</td></tr>';return;}
     myCards.forEach(function(c){var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+c.id+'</td><td>'+c.type+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>';tbody.appendChild(tr);});
+        tr.innerHTML='<td>'+esc(c.id)+'</td><td>'+esc(c.type)+'</td><td>'+fmt(c.balance)+'</td><td>'+fmt(c.loan_balance)+'</td><td>'+c.interest_rate+'%</td><td>'+fmt(c.credit_limit)+'</td><td>'+(c.status==='正常'?bad('正常'):bad(c.status,'warn'))+'</td>';tbody.appendChild(tr);});
 }
 
 function myTransactionsPage(){return '<h3 class="section-title">我的交易记录</h3><div class="card card-custom"><div class="card-body p-3"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>类型</th><th>金额</th><th>对象</th><th>时间</th><th>状态</th></tr></thead><tbody id="my_txn_tbody"></tbody></table></div></div></div>';}

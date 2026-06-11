@@ -29,18 +29,36 @@
 #include <set>
 #include <limits>
 
-using namespace std;
+// Selective using declarations (avoid blanket 'using namespace std' in header)
+using std::string;
+using std::vector;
+using std::map;
+using std::set;
+using std::cout;
+using std::cin;
+using std::endl;
+using std::ifstream;
+using std::ofstream;
+using std::left;
+using std::right;
+using std::setw;
+using std::abs;
+using std::swap;
+using std::getline;
+using std::queue;
+using std::ostream;
+using std::size_t;
 
 // ==================== 常量定义 ====================
-const string DATA_DIR = "data/";
-const string EMPLOYEE_FILE = "data/employee.txt";
-const string CUSTOMER_FILE = "data/customer.txt";
-const string CARD_FILE = "data/card.txt";
-const string TRANSACTION_FILE = "data/transaction.txt";
-const string QUEUE_FILE = "data/queue.txt";
-const string BRANCH_FILE = "data/branch.txt";
-const string GRAPH_FILE = "data/branch_graph.txt";
-const string STATS_FILE = "data/daily_stats.txt";
+const std::string DATA_DIR = "data/";
+const std::string EMPLOYEE_FILE = "data/employee.txt";
+const std::string CUSTOMER_FILE = "data/customer.txt";
+const std::string CARD_FILE = "data/card.txt";
+const std::string TRANSACTION_FILE = "data/transaction.txt";
+const std::string QUEUE_FILE = "data/queue.txt";
+const std::string BRANCH_FILE = "data/branch.txt";
+const std::string GRAPH_FILE = "data/branch_graph.txt";
+const std::string STATS_FILE = "data/daily_stats.txt";
 
 const double VIP_THRESHOLD = 100000.0;    // VIP 资产门槛
 const double LARGE_AMOUNT = 50000.0;      // 大额交易报警阈值
