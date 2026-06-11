@@ -75,19 +75,43 @@ body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",Arial,sans-serif;ba
 <p class="mb-0 opacity-75">v3.3 · C++ 10大模块完整Web实现 · 第十组</p>
 </div>
 <div class="login-body">
-<div class="mb-3"><span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2"><i class="fa-solid fa-shield-halved me-1"></i>多角色登录 · 全功能系统</span></div>
+<div class="mb-3"><span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2" id="login_badge"><i class="fa-solid fa-shield-halved me-1"></i>多角色登录 · 全功能系统</span></div>
+
+<!-- Login Form -->
 <form id="login_form" novalidate>
 <div class="mb-3"><label class="form-label fw-semibold small">登录身份</label>
 <select id="login_role" class="form-select"><option value="admin">管理员 (Admin)</option><option value="employee">职员 (Staff)</option><option value="customer" selected>客户 (Customer)</option></select></div>
 <div class="mb-3"><label for="account_id" class="form-label fw-semibold small">账号</label>
-<input type="text" id="account_id" class="form-control" placeholder="管理员E001 / 客户C000001 / 学号">
-<div class="invalid-feedback">请输入有效账号。</div></div>
+<input type="text" id="account_id" class="form-control" placeholder="管理员E001 / 客户C000001 / 学号"></div>
 <div class="mb-3"><label for="password" class="form-label fw-semibold small">密码</label>
 <input type="password" id="password" class="form-control" placeholder="请输入密码" maxlength="20"></div>
 <div id="login_msg" class="alert py-2 px-3 small hidden" role="alert"></div>
 <button type="submit" class="btn btn-primary btn-rounded w-100"><i class="fa-solid fa-right-to-bracket me-2"></i> 登录</button>
 </form>
-<p class="small text-secondary mb-0 mt-3">管理员: E001/000000 | 职员: E002/111111 | 客户: C000001/123456 | 学员: 学号/后4位</p>
+
+<!-- Register Form (hidden by default) -->
+<form id="register_form" class="hidden" novalidate>
+<h5 class="fw-bold mb-3 text-center"><i class="fa-solid fa-user-plus text-primary me-2"></i>注册新账户</h5>
+<div class="mb-3"><label class="form-label fw-semibold small">学号</label>
+<input type="text" id="reg_student_id" class="form-control" placeholder="请输入学号（如 202418440201）" maxlength="20"></div>
+<div class="mb-3"><label class="form-label fw-semibold small">姓名</label>
+<input type="text" id="reg_name" class="form-control" placeholder="请输入真实姓名" maxlength="30"></div>
+<div class="mb-3"><label class="form-label fw-semibold small">密码</label>
+<input type="password" id="reg_password" class="form-control" placeholder="4-20位密码" maxlength="20"></div>
+<div class="mb-3"><label class="form-label fw-semibold small">确认密码</label>
+<input type="password" id="reg_password2" class="form-control" placeholder="请再次输入密码" maxlength="20"></div>
+<div class="mb-3"><label class="form-label fw-semibold small">班级</label>
+<input type="text" id="reg_class" class="form-control" value="计科2402班" readonly></div>
+<div id="register_msg" class="alert py-2 px-3 small hidden" role="alert"></div>
+<button type="submit" class="btn btn-success btn-rounded w-100"><i class="fa-solid fa-user-check me-2"></i> 立即注册</button>
+</form>
+
+<!-- Toggle Link -->
+<p class="text-center small mb-0 mt-3">
+  <span id="toggle_text">还没有账号？</span>
+  <a href="javascript:void(0)" id="toggle_register" onclick="toggleRegister()" class="text-primary fw-semibold">注册新账户</a>
+</p>
+<p class="small text-secondary mb-0 mt-2 text-center">管理员: E001/000000 | 职员: E002/111111 | 客户: C000001/123456 | 学员: 学号/后4位</p>
 </div></div>
 </section>
 
@@ -240,6 +264,69 @@ $('logout_btn').addEventListener('click',function(){
     api('/api/logout',{method:'POST'});
     currentUser=null;$('system_area').classList.add('hidden');$('login_area').classList.remove('hidden');
     $('login_form').reset();$('page_container').innerHTML='';$('nav_tabs').innerHTML='';
+    // Reset to login mode
+    if($('register_form').classList.contains('hidden')===false)toggleRegister();
+});
+
+// ==================== REGISTER ====================
+var _isRegisterMode=false;
+function toggleRegister(){
+    _isRegisterMode=!_isRegisterMode;
+    if(_isRegisterMode){
+        $('login_form').classList.add('hidden');
+        $('register_form').classList.remove('hidden');
+        $('login_badge').innerHTML='<i class="fa-solid fa-user-plus me-1"></i>新用户注册';
+        $('toggle_text').textContent='已有账号？';
+        $('toggle_register').textContent='返回登录';
+        $('register_msg').classList.add('hidden');
+        $('login_msg').classList.add('hidden');
+    }else{
+        $('login_form').classList.remove('hidden');
+        $('register_form').classList.add('hidden');
+        $('login_badge').innerHTML='<i class="fa-solid fa-shield-halved me-1"></i>多角色登录 · 全功能系统';
+        $('toggle_text').textContent='还没有账号？';
+        $('toggle_register').textContent='注册新账户';
+        $('register_msg').classList.add('hidden');
+    }
+}
+$('register_form').addEventListener('submit',async function(e){
+    e.preventDefault();
+    var sid=$('reg_student_id').value.trim();
+    var name=$('reg_name').value.trim();
+    var pw=$('reg_password').value.trim();
+    var pw2=$('reg_password2').value.trim();
+    var cls=$('reg_class').value.trim();
+    if(!sid||!name||!pw){showMsg($('register_msg'),'请填写所有必填项','warning');return;}
+    if(sid.length<4){showMsg($('register_msg'),'学号至少4位','warning');return;}
+    if(pw.length<4){showMsg($('register_msg'),'密码至少4位','warning');return;}
+    if(pw!==pw2){showMsg($('register_msg'),'两次密码输入不一致','warning');return;}
+    var btn=$('register_form').querySelector('button[type=submit]');
+    btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin me-2"></i>注册中...';
+    var r=await api('/api/register',{method:'POST',body:{student_id:sid,name:name,password:pw,class_name:cls}});
+    btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-user-check me-2"></i>立即注册';
+    if(r.success){
+        showMsg($('register_msg'),r.message+' 即将跳转登录...','success');
+        // Auto-fill login form and switch back
+        setTimeout(function(){
+            $('account_id').value=sid;
+            $('password').value=pw;
+            $('login_role').value='customer';
+            toggleRegister();
+            $('register_msg').classList.add('hidden');
+            // Auto-login
+            api('/api/login',{method:'POST',body:{role:'customer',account_id:sid,password:pw}}).then(function(lr){
+                if(lr.success){
+                    currentUser=lr.data;currentUser.role='customer';
+                    $('login_area').classList.add('hidden');
+                    $('system_area').classList.remove('hidden');
+                    $('top_user').textContent='当前: '+lr.data.name+' (客户)';
+                    buildNavTabs();
+                }
+            });
+        },1500);
+    }else{
+        showMsg($('register_msg'),r.message,'danger');
+    }
 });
 
 // ==================== PAGE BUILDERS ====================

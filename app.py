@@ -839,6 +839,83 @@ def api_logout():
     session.pop("user", None)
     return jsonify({"success": True, "message": "已登出"})
 
+
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    """Register a new student account (account.txt + sdufe card)."""
+    data = request.get_json(silent=True) or {}
+    student_id = str(data.get("student_id", "")).strip()
+    name = str(data.get("name", "")).strip()
+    password = str(data.get("password", "")).strip()
+    class_name = str(data.get("class_name", "计科2402班")).strip()
+
+    # Validation
+    if not student_id or not name or not password:
+        return jsonify({"success": False, "message": "学号、姓名和密码不能为空"}), 400
+    if len(student_id) < 4 or len(student_id) > 20:
+        return jsonify({"success": False, "message": "学号长度应为4-20位"}), 400
+    if len(name) < 1 or len(name) > 30:
+        return jsonify({"success": False, "message": "姓名长度应为1-30位"}), 400
+    if len(password) < 4 or len(password) > 20:
+        return jsonify({"success": False, "message": "密码长度应为4-20位"}), 400
+
+    # Check duplicates in account.txt
+    accounts = read_accounts()
+    for acc in accounts:
+        if acc["id"] == student_id:
+            return jsonify({"success": False, "message": f"学号 {student_id} 已注册，请直接登录"}), 409
+
+    # Check duplicates in customer.txt
+    customers = read_customers()
+    for c in customers:
+        if c["id"] == student_id:
+            return jsonify({"success": False, "message": f"账号 {student_id} 已存在，请直接登录"}), 409
+
+    # Create account
+    new_account = {
+        "id": student_id,
+        "name": name,
+        "password": generate_password_hash(password),
+        "balance": 0.0,
+        "is_locked": False,
+        "is_admin": False
+    }
+    accounts.append(new_account)
+    write_accounts(accounts)
+
+    # Auto-create sdufe card
+    card_id = f"sdufe{student_id}1"
+    cards = read_cards()
+    existing_card_ids = {c["id"] for c in cards}
+    if card_id not in existing_card_ids:
+        today = datetime.now().strftime("%Y-%m-%d")
+        new_card = {
+            "id": card_id,
+            "customer_id": student_id,
+            "type": "储蓄卡",
+            "balance": 0.0,
+            "loan_balance": 0.0,
+            "interest_rate": 1.5,
+            "credit_limit": 0.0,
+            "open_date": today,
+            "status": "正常",
+            "daily_limit": 50000.0
+        }
+        cards.append(new_card)
+        write_cards(cards)
+
+    return jsonify({
+        "success": True,
+        "message": f"注册成功！欢迎 {name} ({student_id})，班级: {class_name}",
+        "data": {
+            "id": student_id,
+            "name": name,
+            "class_name": class_name,
+            "card_id": card_id,
+            "balance": 0.0
+        }
+    })
+
 # ============================================================
 # MODULE 1: EMPLOYEE MANAGEMENT
 # ============================================================
