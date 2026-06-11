@@ -156,6 +156,25 @@ def today_str():
 def gen_txn_id():
     return "T{}{:04d}".format(int(time.time() * 1000), uuid.uuid4().int % 10000)
 
+def resolve_card_id(customer_id):
+    """Find the sdufe card ID for a customer, or return customer_id as fallback."""
+    for c in read_cards():
+        if c["customer_id"] == customer_id:
+            return c["id"]
+    return customer_id
+
+def _sync_card_balance(customer_id, new_balance):
+    """Sync account.txt balance to linked card."""
+    cards = read_cards()
+    changed = False
+    for c in cards:
+        if c["customer_id"] == customer_id and c["status"] == "正常":
+            c["balance"] = new_balance
+            changed = True
+            break
+    if changed:
+        write_cards(cards)
+
 def read_lines(filepath):
     """Read pipe-delimited lines, skip empty (thread-safe)."""
     lines = []
@@ -221,6 +240,35 @@ def init_card_file():
             "B10000005|C000004|储蓄卡|1200000|0|2|0|2023-11-05|正常|500000",
         ]
         write_lines(CARD_FILE, lines)
+
+def sync_student_cards():
+    """Auto-generate sdufe+studentID+1 cards for all account.txt students.
+    Idempotent — never overwrites existing cards."""
+    accounts = read_accounts()
+    cards = read_cards()
+    existing_card_ids = {c["id"] for c in cards}
+    today = datetime.now().strftime("%Y-%m-%d")
+    new_cards = []
+
+    for acc in accounts:
+        student_id = str(acc["id"]).strip()
+        card_id = f"sdufe{student_id}1"
+        if card_id in existing_card_ids:
+            continue  # Already has a card
+        # Determine card type and limit based on balance
+        balance = acc.get("balance", 0)
+        card_type = "储蓄卡"
+        daily_limit = max(balance, 50000)
+        new_cards.append(f"{card_id}|{student_id}|{card_type}|{balance}|0|1.5|0|{today}|正常|{daily_limit}")
+        existing_card_ids.add(card_id)
+
+    if new_cards:
+        # Append new cards to existing file
+        with open(CARD_FILE, "a", encoding="utf-8") as f:
+            for line in new_cards:
+                f.write(line + "\n")
+        print(f"[sync_student_cards] Added {len(new_cards)} student cards (sdufe+学号+1)")
+    return len(new_cards)
 
 def init_branch_file():
     if not os.path.exists(BRANCH_FILE):
@@ -683,6 +731,9 @@ def write_accounts(data):
         ))
     write_lines(ACCOUNT_FILE, lines)
 
+# Auto-create sdufe cards for account.txt students (runs after all helpers defined)
+sync_student_cards()
+
 # ============================================================
 # AUTH ROUTES
 # ============================================================
@@ -1097,7 +1148,9 @@ def api_deposit():
                 return jsonify({"success": False, "message": "账户已锁定"}), 403
             acc["balance"] = acc.get("balance", 0) + amount
             write_accounts(accounts)
-            txn = {"id": gen_txn_id(), "from_card": account_id, "to_card": "系统",
+            # Also sync linked card balance
+            _sync_card_balance(account_id, acc["balance"])
+            txn = {"id": gen_txn_id(), "from_card": resolve_card_id(account_id), "to_card": "系统",
                    "type": "存款", "amount": amount, "time": now_str(), "status": "成功",
                    "employee_id": "", "remark": ""}
             append_transaction(txn)
@@ -1129,7 +1182,8 @@ def api_withdraw():
                 return jsonify({"success": False, "message": f"余额不足! 当前余额: {acc['balance']:.2f}"}), 400
             acc["balance"] -= amount
             write_accounts(accounts)
-            txn = {"id": gen_txn_id(), "from_card": account_id, "to_card": "系统",
+            _sync_card_balance(account_id, acc["balance"])
+            txn = {"id": gen_txn_id(), "from_card": resolve_card_id(account_id), "to_card": "系统",
                    "type": "取款", "amount": amount, "time": now_str(), "status": "成功",
                    "employee_id": "", "remark": ""}
             append_transaction(txn)
@@ -1172,7 +1226,9 @@ def api_transfer():
         from_acc["balance"] -= amount
         to_acc["balance"] = to_acc.get("balance", 0) + amount
         write_accounts(accounts)
-        txn = {"id": gen_txn_id(), "from_card": from_id, "to_card": to_id,
+        _sync_card_balance(from_id, from_acc["balance"])
+        _sync_card_balance(to_id, to_acc["balance"])
+        txn = {"id": gen_txn_id(), "from_card": resolve_card_id(from_id), "to_card": resolve_card_id(to_id),
                "type": "转账", "amount": amount, "time": now_str(), "status": "成功",
                "employee_id": "", "remark": ""}
         append_transaction(txn)
@@ -1227,7 +1283,7 @@ def api_repay():
             card["loan_balance"] = loan - amount
             card["balance"] = balance - amount
             write_cards(cards)
-            txn = {"id": gen_txn_id(), "from_card": account_id, "to_card": "系统",
+            txn = {"id": gen_txn_id(), "from_card": resolve_card_id(account_id), "to_card": "系统",
                    "type": "还款", "amount": amount, "time": now_str(), "status": "成功",
                    "employee_id": "", "remark": ""}
             append_transaction(txn)
@@ -1803,19 +1859,31 @@ def api_risk_approval(cid):
 @app.route("/api/smart/investment/<cid>", methods=["GET"])
 @login_required
 def api_investment_advisor(cid):
-    """Investment advisor based on credit score and available cash."""
-    customers = read_customers()
+    """Investment advisor based on credit score and available cash.
+    Supports both customer.txt and account.txt users."""
     customer = None
-    for c in customers:
+    # Try customer.txt first
+    for c in read_customers():
         if c["id"] == cid:
             customer = c
             break
+    # Fallback: account.txt (student accounts)
+    if not customer:
+        for a in read_accounts():
+            if a["id"] == cid:
+                customer = {"id": a["id"], "name": a["name"],
+                           "credit_score": 650, "type": "普通"}
+                break
     if not customer:
         return jsonify({"success": False, "message": "客户不存在"}), 404
 
     cards = read_cards()
     cash = sum(cd.get("balance", 0) for cd in cards
                if cd["customer_id"] == cid and cd["type"] != "信用卡")
+    # If no cards found, use customer's financial_assets or account balance
+    if cash == 0:
+        cash = safe_float(customer.get("financial_assets",
+                         customer.get("balance", 0)))
 
     credit_score = customer.get("credit_score", 600)
     if credit_score > 750:
@@ -2025,7 +2093,7 @@ def api_dashboard():
 @login_required
 def api_dashboard_customer():
     """Customer-specific dashboard aggregates."""
-    customer_id = session.get("user_id", "")
+    customer_id = session.get("user", {}).get("id", "")
     cards = read_cards()
     transactions = read_transactions()
 
@@ -2037,8 +2105,8 @@ def api_dashboard_customer():
     # Daily interest for my cards
     my_interest = sum(calc_daily_interest(c) for c in my_cards if c.get("status") == "正常")
 
-    # My transactions
-    my_card_ids = [c["id"] for c in my_cards]
+    # My transactions (check sdufe card IDs + legacy account ID + from/to fields)
+    my_card_ids = [c["id"] for c in my_cards] + [customer_id]  # include legacy student ID
     my_txns = [t for t in transactions if
                t.get("from_card") in my_card_ids or t.get("to_card") in my_card_ids or
                t.get("from") == customer_id or t.get("to") == customer_id]
