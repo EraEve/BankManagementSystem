@@ -2478,6 +2478,23 @@ def api_legacy_accounts():
 # ============================================================
 # STARTUP
 # ============================================================
+# README ENDPOINT
+# ============================================================
+
+@app.route("/api/readme", methods=["GET"])
+def api_readme():
+    """Return README.md content for the web README module."""
+    readme_path = os.path.join(BASE_DIR, "README.md")
+    if not os.path.exists(readme_path):
+        return jsonify({"success": False, "message": "README.md 文件不存在"}), 404
+    try:
+        with open(readme_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return jsonify({"success": True, "content": content})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"读取README.md失败: {str(e)}"}), 500
+
+# ============================================================
 
 def open_browser():
     webbrowser.open("http://127.0.0.1:5000")
