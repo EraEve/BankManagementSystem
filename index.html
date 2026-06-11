@@ -1305,15 +1305,20 @@ function readmePage(){
 async function loadReadme(){
     var el=$('readme_content');
     if(!el)return;
-    var r=await api('/api/readme');
-    if(!r.success){
-        el.innerHTML='<div class="alert alert-danger py-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>'+esc(r.message)+'</div>';
-        return;
+    try{
+        var r=await api('/api/readme');
+        if(!r||!r.success){
+            el.innerHTML='<div class="alert alert-warning py-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>'+
+                (r&&r.message?esc(r.message):'无法加载 README.md，请确认服务器已更新并 Reload')+
+                '<br><small class="text-secondary mt-2 d-block">提示：PythonAnywhere 需要在 Web 面板点击 <b>Reload</b> 才能加载新的 API 端点</small></div>';
+            return;
+        }
+        var html=simpleMarkdownToHtml(r.content);
+        el.innerHTML='<div class="readme-rendered">'+html+'</div>';
+        el.innerHTML+='<hr class="mt-4"><p class="text-center text-secondary small mb-0"><i class="fa-solid fa-file-lines me-1"></i>以上内容来自项目根目录 README.md · 实时读取</p>';
+    }catch(e){
+        el.innerHTML='<div class="alert alert-danger py-3"><i class="fa-solid fa-bug me-2"></i>渲染失败: '+esc(e.message)+'<br><small class="text-secondary mt-2 d-block">请刷新页面后重试，或检查浏览器控制台</small></div>';
     }
-    var html=simpleMarkdownToHtml(r.content);
-    el.innerHTML='<div class="readme-rendered">'+html+'</div>';
-    // Add a subtle footer
-    el.innerHTML+='<hr class="mt-4"><p class="text-center text-secondary small mb-0"><i class="fa-solid fa-file-lines me-1"></i>以上内容来自项目根目录 README.md · 实时读取</p>';
 }
 
 // --- About Page ---
