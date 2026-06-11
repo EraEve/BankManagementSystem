@@ -1205,7 +1205,7 @@ function simpleMarkdownToHtml(md){
         if(line.startsWith('```')){
             if(inCodeBlock){
                 var langLabel=codeLang?(' <small class="text-secondary">('+codeLang+')</small>'):'';
-                h+='<pre class="bg-dark text-light p-3 rounded-2 mb-3" style="font-size:12px;line-height:1.5;overflow-x:auto">'+codeLangLabel+'\n'+codeContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+                h+='<pre class="bg-dark text-light p-3 rounded-2 mb-3" style="font-size:12px;line-height:1.5;overflow-x:auto">'+langLabel+'\n'+codeContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
                 codeContent='';codeLang='';inCodeBlock=false;
             }else{
                 codeLang=line.slice(3).trim();
